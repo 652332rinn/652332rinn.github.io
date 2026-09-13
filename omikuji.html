@@ -1,974 +1,846 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SweetSpot - 美味しいケーキ屋さん探し</title>
-    <!-- Open Graph (OGP) Meta Tags for GitHub Pages & SNS Sharing -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="SweetSpot - 美味しいケーキ屋さん探訪">
-    <meta property="og:description" content="都内近郊のこだわりパティスリーやカフェ、ケーキ店をマップ検索＆気分診断で探せるWebアプリ">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=1200&q=80">
-    <meta name="twitter:card" content="summary_large_image">
-
-    <!-- Tailwind CSS -->
+    <title>ChocoCake Select - 究極のチョコレートケーキ巡りガイド</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Radar Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        cream: {
-                            50: '#fffdfa',
-                            100: '#fff9ef',
-                            200: '#ffeed5',
-                            300: '#fde0b2',
+                        cocoa: {
+                            50: '#fdfbf7',
+                            100: '#f7f0e6',
+                            200: '#edd9c3',
+                            300: '#dec09d',
+                            400: '#c5945a',
+                            500: '#ad723a',
+                            600: '#8e562b',
+                            700: '#6d3f20',
+                            800: '#4a2b16',
+                            900: '#2b190c',
+                            950: '#1a0e07',
                         },
-                        berry: {
-                            500: '#e63946',
-                            600: '#d62828',
-                            700: '#ba181b',
-                        },
-                        choco: {
-                            700: '#4a2c2a',
-                            800: '#361d1b',
-                            900: '#231110',
-                        },
-                        caramel: {
-                            400: '#e59866',
-                            500: '#d35400',
-                            600: '#b04300',
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
                         }
                     },
                     fontFamily: {
-                        sans: ['"SF Pro JP"', '"Hiragino Kaku Gothic ProN"', '"Noto Sans JP"', 'sans-serif'],
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                        serif: ['"Cinzel"', 'serif'],
                     }
                 }
             }
         }
     </script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS & JS for Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
-
     <style>
-        body {
-            font-family: 'M PLUS Rounded 1c', sans-serif;
-            background-color: #fffdfa;
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fce0a2 0%, #d4af37 50%, #f3e5ab 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .font-serif-title {
-            font-family: 'Playfair Display', serif;
+        .bg-pattern {
+            background-color: #1a0e07;
+            background-image: radial-gradient(#3d2314 1px, transparent 1px);
+            background-size: 24px 24px;
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2b190c;
         }
-        /* Custom Leaflet styling */
-        .leaflet-popup-content-wrapper {
-            border-radius: 1rem;
-            padding: 0.25rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-        }
-        .custom-pin {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #e63946;
-            color: white;
-            border-radius: 50%;
-            width: 38px;
-            height: 38px;
-            border: 3px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            font-size: 16px;
-            transition: transform 0.2s ease;
-        }
-        .custom-pin:hover {
-            transform: scale(1.2);
-            background: #b04300;
-        }
-        .cake-badge {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #6d3f20;
+            border-radius: 3px;
         }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col selection:bg-rose-200 selection:text-rose-900">
+<body class="bg-pattern text-cocoa-100 min-h-screen font-sans flex flex-col antialiased selection:bg-gold-500 selection:text-cocoa-950">
 
-    <!-- Header / Navbar -->
-    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-rose-100 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Brand Logo -->
-                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-rose-200">
-                        <i class="fa-solid fa-cake-candles text-xl"></i>
-                    </div>
-                    <div>
-                        <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
-                            SweetSpot
-                        </span>
-                        <span class="hidden sm:inline-block text-xs text-rose-400 font-medium ml-1.5 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                            ケーキ探訪
-                        </span>
-                    </div>
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-cocoa-950/90 backdrop-blur-md border-b border-cocoa-800/60 shadow-xl transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('grid')">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-cocoa-600 flex items-center justify-center shadow-lg shadow-gold-500/10">
+                    <svg class="w-6 h-6 text-cocoa-950" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
                 </div>
+                <div>
+                    <span class="font-serif text-2xl font-bold tracking-wider gold-gradient-text">ChocoCake</span>
+                    <span class="text-xs uppercase tracking-widest text-cocoa-300 block font-medium">Select & Guide</span>
+                </div>
+            </div>
 
-                <!-- Navigation Tabs -->
-                <nav class="flex items-center gap-1 sm:gap-2">
-                    <button id="nav-explore" onclick="switchTab('explore')" class="nav-btn px-3 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1.5 bg-rose-50 text-rose-600">
-                        <i class="fa-solid fa-[#e63946] fa-compass"></i>
-                        <span class="hidden md:inline">探す</span>
-                    </button>
-                    <button id="nav-diagnosis" onclick="switchTab('diagnosis')" class="nav-btn px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-rose-500 hover:bg-rose-50/50 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
-                        <span class="hidden md:inline">気分診断</span>
-                    </button>
-                    <button id="nav-favorites" onclick="switchTab('favorites')" class="nav-btn px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-rose-500 hover:bg-rose-50/50 transition flex items-center gap-1.5 relative">
-                        <i class="fa-solid fa-heart text-rose-500"></i>
-                        <span class="hidden md:inline">お気に入り</span>
-                        <span id="fav-count-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                    </button>
-                    <button id="nav-log" onclick="switchTab('log')" class="nav-btn px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-rose-500 hover:bg-rose-50/50 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-book-open text-caramel-500"></i>
-                        <span class="hidden md:inline">ケーキ日記</span>
-                    </button>
-                </nav>
+            <!-- Header Action Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="openDiagnosisModal()" class="flex items-center space-x-2 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-cocoa-950 font-bold px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm shadow-lg shadow-gold-500/20 transition duration-200 transform hover:scale-105">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>AIケーキ診断</span>
+                </button>
+
+                <button onclick="toggleWishlistDrawer()" class="relative p-2 rounded-full bg-cocoa-900 border border-cocoa-700 hover:border-gold-500/50 text-cocoa-200 hover:text-gold-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    <span id="wishlist-badge" class="hidden absolute -top-1 -right-1 bg-gold-500 text-cocoa-950 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
+
+                <button onclick="switchView('compare')" class="relative p-2 rounded-full bg-cocoa-900 border border-cocoa-700 hover:border-gold-500/50 text-cocoa-200 hover:text-gold-400 transition" title="比較マトリックス">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
+                    <span id="compare-badge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-cocoa-950 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-        <!-- ================= TAB 1: EXPLORE / SEARCH ================= -->
-        <div id="tab-explore" class="tab-content block space-y-6">
-            
-            <!-- Hero Search & Filter Box -->
-            <div class="relative bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-15 text-9xl select-none pointer-events-none">
-                    🍰
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Spotlight Section -->
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-cocoa-900 via-cocoa-950 to-black border border-cocoa-800 p-6 sm:p-10 mb-10 shadow-2xl">
+            <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay"></div>
+            <div class="relative z-10 max-w-2xl">
+                <div class="inline-flex items-center space-x-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-3 py-1 mb-4 text-gold-400 text-xs font-medium">
+                    <span class="w-2 h-2 rounded-full bg-gold-400 animate-pulse"></span>
+                    <span>極上のカカオ体験をお届け</span>
                 </div>
-                <div class="relative z-10 max-w-2xl">
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
-                        至福のひとときを、最高のケーキとともに。
-                    </h1>
-                    <p class="text-rose-100 text-sm sm:text-base mb-6">
-                        都内近郊のこだわりパティスリー、隠れ家カフェ、有名店を簡単検索。
-                    </p>
+                <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4 leading-tight">
+                    至高の<span class="gold-gradient-text">チョコレートケーキ</span>を<br>見つける旅へ。
+                </h1>
+                <p class="text-cocoa-300 text-sm sm:text-base mb-6 leading-relaxed">
+                    濃厚ガトーショコラから世界基準のクラフトBean to Bar、華やかなサロン・ド・ショコラまで。食感・カカオ濃度・シーンからあなた好みの一品をご紹介します。
+                </p>
 
-                    <!-- Search Input -->
-                    <div class="flex flex-col sm:flex-row gap-2 bg-white/95 p-2 rounded-2xl shadow-lg backdrop-blur-md">
-                        <div class="flex-grow flex items-center px-3 gap-2 text-slate-700">
-                            <i class="fa-solid fa-magnifying-glass text-rose-400"></i>
-                            <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="店名、駅名（例：自由が丘、銀座）、ケーキの種類..." class="w-full bg-transparent border-none text-slate-800 text-sm focus:outline-none placeholder-slate-400 font-medium py-2">
-                            <button id="clear-search" onclick="clearSearch()" class="hidden text-slate-400 hover:text-slate-600 text-xs px-1">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                        <div class="flex gap-2">
-                            <select id="area-select" onchange="applyFilters()" class="bg-rose-50 text-rose-900 font-bold text-xs sm:text-sm px-3 py-2.5 rounded-xl border border-rose-100 focus:outline-none cursor-pointer">
-                                <option value="all">全エリア</option>
-                                <option value="自由が丘">自由が丘</option>
-                                <option value="銀座">銀座・有楽町</option>
-                                <option value="表参道">表参道・青山</option>
-                                <option value="吉祥寺">吉祥寺</option>
-                                <option value="新宿">新宿・代々木</option>
-                                <option value="六本木">六本木・赤坂</option>
-                                <option value="目黒">目黒・恵比寿</option>
-                            </select>
-                            <button onclick="applyFilters()" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-1.5">
-                                <span>検索</span>
-                            </button>
-                        </div>
+                <!-- Search Input Bar -->
+                <div class="relative max-w-xl">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-cocoa-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="店名・エリア・キーワード（例: 自由が丘, グルテンフリー）" class="w-full pl-11 pr-24 py-3.5 bg-cocoa-900/90 border border-cocoa-700 rounded-2xl text-cocoa-100 placeholder-cocoa-500 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-sm shadow-inner transition">
+                    <button onclick="resetSearch()" id="clear-search-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-cocoa-800 text-cocoa-300 hover:text-white px-2 py-1 rounded-md">クリア</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Category Chips / Quick Filters -->
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-filter text-rose-400"></i> カテゴリで絞り込み
-                    </h2>
-                    <span id="results-count" class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
-                        該当 0 件
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar" id="category-chips">
-                    <button onclick="toggleCategory('all')" data-cat="all" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold border whitespace-nowrap transition bg-rose-600 text-white border-rose-600 shadow-sm">
-                        ✨ すべて
-                    </button>
-                    <button onclick="toggleCategory('ショートケーキ')" data-cat="ショートケーキ" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🍓 ショートケーキ
-                    </button>
-                    <button onclick="toggleCategory('タルト')" data-cat="タルト" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🥧 フルーツタルト
-                    </button>
-                    <button onclick="toggleCategory('チョコレート')" data-cat="チョコレート" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🍫 濃厚チョコ・ガトー
-                    </button>
-                    <button onclick="toggleCategory('モンブラン')" data-cat="モンブラン" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🌰 絞りたてモンブラン
-                    </button>
-                    <button onclick="toggleCategory('チーズケーキ')" data-cat="チーズケーキ" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🧀 濃厚チーズケーキ
-                    </button>
-                    <button onclick="toggleCategory('パフェ')" data-cat="パフェ" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🍨 限定パフェ・イートイン
-                    </button>
-                    <button onclick="toggleCategory('焼き菓子')" data-cat="焼き菓子" class="cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition">
-                        🍪 マカロン・焼き菓子
-                    </button>
-                </div>
+        <!-- Navigation View Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8 border-b border-cocoa-800/80 pb-4">
+            <!-- View Selector Buttons -->
+            <div class="flex items-center space-x-1 bg-cocoa-950 p-1.5 rounded-2xl border border-cocoa-800">
+                <button id="view-tab-grid" onclick="switchView('grid')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition flex items-center space-x-2 bg-gold-500 text-cocoa-950 font-bold shadow">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <span>一覧表示</span>
+                </button>
+                <button id="view-tab-compare" onclick="switchView('compare')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-cocoa-400 hover:text-cocoa-200 transition flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
+                    <span>スペック比較</span>
+                </button>
+                <button id="view-tab-pairing" onclick="switchView('pairing')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-cocoa-400 hover:text-cocoa-200 transition flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span>ペアリングガイド</span>
+                </button>
             </div>
 
-            <!-- Feature Badges & Sorting Toolbar -->
-            <div class="bg-amber-50/60 p-3 sm:p-4 rounded-2xl border border-amber-100/80 flex flex-wrap items-center justify-between gap-3">
-                <!-- Checkbox Filters -->
-                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer font-medium text-slate-700 hover:text-rose-600">
-                        <input type="checkbox" id="filter-eatin" onchange="applyFilters()" class="rounded text-rose-500 focus:ring-rose-400 w-4 h-4">
-                        <span>☕ イートイン可能</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer font-medium text-slate-700 hover:text-rose-600">
-                        <input type="checkbox" id="filter-takeout" onchange="applyFilters()" class="rounded text-rose-500 focus:ring-rose-400 w-4 h-4">
-                        <span>🛍️ テイクアウト専門</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer font-medium text-slate-700 hover:text-rose-600">
-                        <input type="checkbox" id="filter-reservation" onchange="applyFilters()" class="rounded text-rose-500 focus:ring-rose-400 w-4 h-4">
-                        <span>📅 ネット予約可</span>
-                    </label>
+            <!-- Sort dropdown -->
+            <div class="flex items-center space-x-2 text-xs sm:text-sm text-cocoa-300">
+                <span>並び替え:</span>
+                <select id="sort-select" onchange="handleSortChange()" class="bg-cocoa-900 border border-cocoa-700 text-cocoa-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gold-500">
+                    <option value="popular">おすすめ度（高順）</option>
+                    <option value="richness">カカオ濃厚度（高い順）</option>
+                    <option value="rating">評価★（高い順）</option>
+                    <option value="price-asc">価格（低い順）</option>
+                    <option value="price-desc">価格（高い順）</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Filter Category Chips (Grid view mode) -->
+        <div id="filter-container" class="space-y-3 mb-8">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-cocoa-400 font-semibold uppercase tracking-wider mr-2">スタイル:</span>
+                <button onclick="filterCategory('all')" class="category-btn active border px-3 py-1.5 rounded-full text-xs font-medium transition bg-gold-500 text-cocoa-950 border-gold-400">すべて</button>
+                <button onclick="filterCategory('ガトーショコラ')" class="category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition">ガトーショコラ</button>
+                <button onclick="filterCategory('ムース')" class="category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition">濃厚ムース / オペラ</button>
+                <button onclick="filterCategory('Bean to Bar')" class="category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition">Bean to Bar</button>
+                <button onclick="filterCategory('テリーヌ')" class="category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition">テリーヌショコラ</button>
+                <button onclick="filterCategory('カフェ')" class="category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition">イートインカフェ</button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-xs text-cocoa-400 font-semibold uppercase tracking-wider mr-2">特徴タグ:</span>
+                <button onclick="toggleTagFilter('グルテンフリー')" class="tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition">#グルテンフリー</button>
+                <button onclick="toggleTagFilter('手土産推奨')" class="tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition">#手土産・ギフト</button>
+                <button onclick="toggleTagFilter('イートイン可')" class="tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition">#イートイン可</button>
+                <button onclick="toggleTagFilter('予約推奨')" class="tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition">#予約推奨</button>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Grid View Container -->
+        <section id="view-grid" class="block">
+            <!-- Active Filter Status -->
+            <div id="filter-summary" class="hidden mb-4 text-xs text-cocoa-300 flex items-center justify-between bg-cocoa-900/50 p-3 rounded-xl border border-cocoa-800">
+                <div>検索結果: <span id="shop-count" class="font-bold text-gold-400">0</span> 件のお店が見つかりました</div>
+                <button onclick="resetAllFilters()" class="text-gold-400 hover:underline">すべての条件をリセット</button>
+            </div>
+
+            <!-- Cards Grid -->
+            <div id="shops-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <!-- Shop Cards injected dynamically via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-16 bg-cocoa-950/50 rounded-3xl border border-cocoa-800">
+                <svg class="w-16 h-16 text-cocoa-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <h3 class="text-lg font-bold text-cocoa-200 mb-1">条件に一致するお店が見つかりませんでした</h3>
+                <p class="text-sm text-cocoa-400 mb-4">キーワードやフィルターを変更してお試しください。</p>
+                <button onclick="resetAllFilters()" class="bg-cocoa-800 hover:bg-cocoa-700 text-gold-400 text-xs px-4 py-2 rounded-xl border border-cocoa-700 transition">検索条件をクリア</button>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Comparison View Container -->
+        <section id="view-compare" class="hidden">
+            <div class="bg-cocoa-900/50 border border-cocoa-800 rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <span>チョコレートケーキ スぺック比較</span>
+                        </h2>
+                        <p class="text-xs text-cocoa-400 mt-1">カードの「比較に追加」ボタンで気になるケーキを最大3個まで選んで比較できます。</p>
+                    </div>
+                    <button onclick="clearComparison()" class="text-xs bg-cocoa-800 hover:bg-cocoa-700 text-cocoa-300 px-3 py-1.5 rounded-lg border border-cocoa-700">選択をクリア</button>
                 </div>
 
-                <!-- Sort & Display Switch -->
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-amber-200/50">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-xs text-slate-500 font-bold">並び替え:</span>
-                        <select id="sort-select" onchange="applyFilters()" class="bg-white text-slate-700 text-xs sm:text-sm font-bold px-2.5 py-1.5 rounded-xl border border-amber-200 focus:outline-none cursor-pointer">
-                            <option value="rating">★ 評価の高い順</option>
-                            <option value="reviews">💬 口コミ数の多い順</option>
-                            <option value="price-asc">￥ 価格が安い順</option>
-                            <option value="price-desc">￥ 価格が高い順</option>
-                        </select>
-                    </div>
+                <div id="compare-table-container" class="overflow-x-auto custom-scrollbar">
+                    <!-- Dynamic comparison table inserted here -->
+                </div>
+            </div>
+        </section>
 
-                    <!-- Layout Toggle (Grid vs Map) -->
-                    <div class="bg-white p-1 rounded-xl border border-amber-200 flex items-center gap-1">
-                        <button id="view-grid-btn" onclick="toggleViewMode('split')" class="p-1.5 rounded-lg text-xs font-bold transition bg-rose-500 text-white shadow-sm" title="リスト＆マップ併記">
-                            <i class="fa-solid fa-border-all"></i>
+        <!-- SECTION 3: Pairing Guide View Container -->
+        <section id="view-pairing" class="hidden">
+            <div class="bg-cocoa-900/50 border border-cocoa-800 rounded-3xl p-6 sm:p-8">
+                <div class="max-w-3xl mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">極上マリアージュ：ドリンク＆ケーキの相性ガイド</h2>
+                    <p class="text-sm text-cocoa-300">チョコレートの持っている酸味や苦み、脂肪分は合わせる飲み物で表情が劇的に変わります。気分や好みのドリンクから最適なケーキを探してみましょう。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="pairing-cards">
+                    <!-- Dynamic pairing options -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-cocoa-950 border-t border-cocoa-800/80 py-8 text-center text-xs text-cocoa-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="font-serif text-lg font-bold gold-gradient-text mb-2">ChocoCake Select</div>
+            <p class="mb-4">東京エリアを中心に人気のチョコレートケーキ＆ショコラティエ名店を厳選紹介</p>
+            <p>© 2026 ChocoCake Select Guide. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Wishlist Drawer (Slide-over panel) -->
+    <div id="wishlist-drawer" class="fixed inset-0 z-50 overflow-hidden pointer-events-none">
+        <div id="wishlist-backdrop" onclick="toggleWishlistDrawer()" class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300"></div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div id="wishlist-panel" class="w-screen max-w-md bg-cocoa-950 border-l border-cocoa-800 text-cocoa-100 p-6 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out pointer-events-auto flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-cocoa-800 pb-4 mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span>お気に入り・クリップ一覧</span>
+                        </h2>
+                        <button onclick="toggleWishlistDrawer()" class="text-cocoa-400 hover:text-white p-1">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
-                        <button id="view-map-btn" onclick="toggleViewMode('map')" class="p-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition" title="マップ全画面">
-                            <i class="fa-solid fa-map-location-dot"></i>
-                        </button>
                     </div>
+                    <div id="wishlist-items" class="space-y-4 max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Dynamic saved items -->
+                    </div>
+                </div>
+                <div class="border-t border-cocoa-800 pt-4">
+                    <button onclick="toggleWishlistDrawer()" class="w-full bg-cocoa-900 hover:bg-cocoa-800 text-cocoa-200 py-2.5 rounded-xl text-sm font-medium border border-cocoa-700 transition">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHOP DETAIL MODAL -->
+    <div id="shop-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
+        <div onclick="closeShopModal()" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        
+        <div class="relative bg-cocoa-950 border border-cocoa-700 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl z-10 text-cocoa-100">
+            <!-- Modal Header Image -->
+            <div class="relative h-64 sm:h-80 w-full overflow-hidden rounded-t-3xl">
+                <img id="modal-img" src="" alt="Cake detail" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-cocoa-950 via-cocoa-950/40 to-transparent"></div>
+                <button onclick="closeShopModal()" class="absolute top-4 right-4 bg-cocoa-950/80 text-white hover:bg-cocoa-800 p-2 rounded-full border border-cocoa-700 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <div class="absolute bottom-4 left-6 right-6">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span id="modal-category" class="bg-gold-500 text-cocoa-950 font-bold text-xs px-2.5 py-1 rounded-full">カテゴリー</span>
+                        <span id="modal-area" class="bg-cocoa-900/80 text-cocoa-200 text-xs px-2.5 py-1 rounded-full border border-cocoa-700">エリア</span>
+                    </div>
+                    <h2 id="modal-title" class="text-2xl sm:text-3xl font-bold text-white"></h2>
                 </div>
             </div>
 
-            <!-- Content Split Grid (Cards + Map) -->
-            <div id="content-container" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Modal Content Body -->
+            <div class="p-6 sm:p-8 space-y-8">
                 
-                <!-- Left: Shop Cards List (7 Cols) -->
-                <div id="shop-cards-wrapper" class="lg:col-span-7 space-y-4">
-                    <div id="shop-cards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                        <!-- Cards dynamically injected here -->
+                <!-- Signature Cake Spotlight -->
+                <div class="bg-cocoa-900/80 border border-cocoa-800 rounded-2xl p-5 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-gold-500/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                        <div>
+                            <span class="text-xs font-semibold text-gold-400 tracking-wider uppercase">看板＆おすすめ一品</span>
+                            <h3 id="modal-signature" class="text-xl font-bold text-white"></h3>
+                        </div>
+                        <span id="modal-price" class="text-lg font-extrabold text-gold-400 bg-cocoa-950 px-3 py-1 rounded-xl border border-cocoa-800"></span>
                     </div>
-                    <!-- Empty State -->
-                    <div id="no-results" class="hidden text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                        <div class="text-5xl mb-3">🍰🔍</div>
-                        <h3 class="text-lg font-bold text-slate-700">条件に合うケーキ屋さん coalition</h3>
-                        <p class="text-sm text-slate-500 mt-1">検索キーワードやフィルターを変更して再度お試しください。</p>
-                        <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 bg-rose-100 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-200 transition">
-                            フィルターをリセット
-                        </button>
+                    <p id="modal-desc" class="text-sm text-cocoa-200 leading-relaxed"></p>
+                </div>
+
+                <!-- Radar Chart & Spec Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h4 class="text-sm font-bold text-white mb-3 flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+                            <span>カカオ＆味わいプロファイル</span>
+                        </h4>
+                        <div class="w-full h-56 relative bg-cocoa-900/40 rounded-2xl p-2 border border-cocoa-800/80 flex items-center justify-center">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="bg-cocoa-900/60 p-3.5 rounded-xl border border-cocoa-800">
+                            <span class="text-cocoa-400 block mb-1">オススメの味わい方・温度帯</span>
+                            <span id="modal-temp" class="text-cocoa-100 font-medium text-sm"></span>
+                        </div>
+                        <div class="bg-cocoa-900/60 p-3.5 rounded-xl border border-cocoa-800">
+                            <span class="text-cocoa-400 block mb-1">推奨ペアリングドリンク</span>
+                            <span id="modal-drink" class="text-gold-300 font-medium text-sm"></span>
+                        </div>
+                        <div class="bg-cocoa-900/60 p-3.5 rounded-xl border border-cocoa-800">
+                            <span class="text-cocoa-400 block mb-1">アレルギー・特徴</span>
+                            <div id="modal-tags-container" class="flex flex-wrap gap-1.5 mt-1"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right: Interactive Map (5 Cols) -->
-                <div id="map-wrapper" class="lg:col-span-5 sticky top-20 bg-white rounded-3xl border border-slate-200 p-2 shadow-md overflow-hidden">
-                    <div class="flex items-center justify-between px-3 py-2 border-b border-slate-100 mb-2">
-                        <span class="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-location-dot text-rose-500"></i> 店舗マップ
-                        </span>
-                        <span class="text-[11px] text-slate-400">ピンをタップで詳細表示</span>
+                <!-- Shop Details & Access -->
+                <div class="border-t border-cocoa-800 pt-6">
+                    <h4 class="text-sm font-bold text-white mb-4">店舗情報 & アクセス</h4>
+                    <div class="bg-cocoa-900/40 rounded-2xl p-4 border border-cocoa-800 space-y-2 text-xs text-cocoa-300">
+                        <div class="flex"><span class="w-24 text-cocoa-400 shrink-0">住所</span><span id="modal-address" class="text-cocoa-100"></span></div>
+                        <div class="flex"><span class="w-24 text-cocoa-400 shrink-0">最寄り駅</span><span id="modal-station" class="text-cocoa-100"></span></div>
+                        <div class="flex"><span class="w-24 text-cocoa-400 shrink-0">営業時間</span><span id="modal-hours" class="text-cocoa-100"></span></div>
+                        <div class="flex"><span class="w-24 text-cocoa-400 shrink-0">定休日</span><span id="modal-holidays" class="text-cocoa-100"></span></div>
                     </div>
-                    <div id="leaflet-map" class="w-full h-[400px] lg:h-[550px] rounded-2xl z-10"></div>
+                </div>
+
+                <!-- Live User Reviews & Submission -->
+                <div class="border-t border-cocoa-800 pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-sm font-bold text-white">みんなのクチコミ・レビュー</h4>
+                        <button onclick="toggleReviewForm()" class="text-xs text-gold-400 hover:underline">+ レビューを書く</button>
+                    </div>
+
+                    <!-- Review Form -->
+                    <div id="review-form-container" class="hidden mb-6 bg-cocoa-900 p-4 rounded-2xl border border-cocoa-700 space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <input type="text" id="review-author" placeholder="お名前（ニックネーム）" class="bg-cocoa-950 border border-cocoa-700 text-xs text-white rounded-lg p-2 flex-grow">
+                            <select id="review-rating" class="bg-cocoa-950 border border-cocoa-700 text-xs text-gold-400 rounded-lg p-2">
+                                <option value="5">★★★★★ (5.0)</option>
+                                <option value="4">★★★★☆ (4.0)</option>
+                                <option value="3">★★★☆☆ (3.0)</option>
+                            </select>
+                        </div>
+                        <textarea id="review-comment" rows="2" placeholder="ケーキの濃厚さや感想を共有してください..." class="w-full bg-cocoa-950 border border-cocoa-700 text-xs text-white rounded-lg p-2"></textarea>
+                        <button onclick="submitReview()" class="w-full bg-gold-500 hover:bg-gold-400 text-cocoa-950 font-bold text-xs py-2 rounded-lg">投稿する</button>
+                    </div>
+
+                    <!-- Review List -->
+                    <div id="modal-reviews-list" class="space-y-3">
+                        <!-- Dynamic reviews -->
+                    </div>
                 </div>
 
             </div>
         </div>
+    </div>
 
-        <!-- ================= TAB 2: AI / MOOD DIAGNOSIS ================= -->
-        <div id="tab-diagnosis" class="tab-content hidden max-w-2xl mx-auto space-y-6">
-            <div class="bg-gradient-to-br from-amber-500 via-rose-500 to-pink-500 rounded-3xl p-6 sm:p-8 text-white text-center shadow-xl">
-                <div class="w-16 h-16 bg-white/20 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 backdrop-blur-md">
-                    🔮
-                </div>
-                <h2 class="text-2xl font-extrabold mb-2">今日の気分でケーキ診断</h2>
-                <p class="text-rose-100 text-sm">3つの質問に答えるだけで、今のあなたにぴったりなパティスリー＆ケーキをAI提案！</p>
+    <!-- AI DIAGNOSIS QUIZ MODAL -->
+    <div id="diagnosis-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div onclick="closeDiagnosisModal()" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="relative bg-cocoa-950 border border-gold-500/40 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl z-10 text-cocoa-100">
+            <button onclick="closeDiagnosisModal()" class="absolute top-4 right-4 text-cocoa-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <!-- Quiz Step Header -->
+            <div class="text-center mb-6">
+                <span class="text-xs font-serif text-gold-400 uppercase tracking-widest block mb-1">AI Recommendation</span>
+                <h3 class="text-2xl font-bold text-white">理想のチョコレートケーキ診断</h3>
+                <p class="text-xs text-cocoa-300 mt-1">3つの質問から今のあなたに最適な絶品ショコラを算出します。</p>
             </div>
 
-            <!-- Quiz Card -->
-            <div id="quiz-card" class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm text-center">
-                
+            <!-- Quiz Steps Container -->
+            <div id="quiz-body" class="space-y-6">
                 <!-- Question 1 -->
-                <div id="quiz-q1" class="quiz-step space-y-4">
-                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-3 py-1 rounded-full uppercase">Step 1 / 3</span>
-                    <h3 class="text-xl font-bold text-slate-800">今、一番食べたい味付け・食感は？</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <button onclick="answerQuiz('flavor', 'fruity')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">🍓</span>
-                            <div>
-                                <div class="text-sm">甘酸っぱいフルーツ</div>
-                                <div class="text-xs font-normal text-slate-400">いちご・タルト・ベリー系</div>
-                            </div>
+                <div class="quiz-step" data-step="1">
+                    <h4 class="text-sm font-bold text-gold-300 mb-3">Q1. 求める食感や口当たりは？</h4>
+                    <div class="space-y-2">
+                        <button onclick="selectAnswer(1, 'dense')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>ずっしり濃厚＆生チョコのようなねっとり感</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
-                        <button onclick="answerQuiz('flavor', 'rich')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">🍫</span>
-                            <div>
-                                <div class="text-sm">濃厚で深みのある甘さ</div>
-                                <div class="text-xs font-normal text-slate-400">チョコ・モンブラン・抹茶</div>
-                            </div>
+                        <button onclick="selectAnswer(1, 'smooth')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>なめらかに溶けるエアリーなムース＆層の重なり</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
-                        <button onclick="answerQuiz('flavor', 'creamy')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">🧀</span>
-                            <div>
-                                <div class="text-sm">コク旨でクリーミー</div>
-                                <div class="text-xs font-normal text-slate-400">チーズケーキ・生クリーム系</div>
-                            </div>
-                        </button>
-                        <button onclick="answerQuiz('flavor', 'light')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">🍵</span>
-                            <div>
-                                <div class="text-sm">上品でやさしい和・焼き菓子</div>
-                                <div class="text-xs font-normal text-slate-400">マカロン・フィナンシェ・紅茶</div>
-                            </div>
+                        <button onclick="selectAnswer(1, 'fruity')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>カカオ本来の果実味・酸味を楽しめる軽やかな味わい</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Question 2 -->
-                <div id="quiz-q2" class="quiz-step hidden space-y-4">
-                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-3 py-1 rounded-full uppercase">Step 2 / 3</span>
-                    <h3 class="text-xl font-bold text-slate-800">ケーキを楽しむスタイルは？</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <button onclick="answerQuiz('style', 'cafe')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">☕</span>
-                            <div>
-                                <div class="text-sm">おしゃれな店内でカフェタイム</div>
-                                <div class="text-xs font-normal text-slate-400">イートイン・パフェ・紅茶重視</div>
-                            </div>
+                <div class="quiz-step hidden" data-step="2">
+                    <h4 class="text-sm font-bold text-gold-300 mb-3">Q2. 利用シーン・目的は？</h4>
+                    <div class="space-y-2">
+                        <button onclick="selectAnswer(2, 'gift')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>大切な人への贅沢な手土産・ギフト</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
-                        <button onclick="answerQuiz('style', 'takeout')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">🎁</span>
-                            <div>
-                                <div class="text-sm">自宅やおうちパーティーで</div>
-                                <div class="text-xs font-normal text-slate-400">テイクアウト・手土産・個包装</div>
-                            </div>
+                        <button onclick="selectAnswer(2, 'cafe')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>洗練されたカフェ空間でゆったり楽しみたい</span>
+                            <span class="text-gold-400">➔</span>
+                        </button>
+                        <button onclick="selectAnswer(2, 'reward')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>一日の終わりに自宅で楽しむ最高のご褒美</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Question 3 -->
-                <div id="quiz-q3" class="quiz-step hidden space-y-4">
-                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-3 py-1 rounded-full uppercase">Step 3 / 3</span>
-                    <h3 class="text-xl font-bold text-slate-800">ご予算・贅沢度のイメージは？</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <button onclick="answerQuiz('budget', 'casual')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">✨</span>
-                            <div>
-                                <div class="text-sm">普段のご褒美（〜1,000円）</div>
-                                <div class="text-xs font-normal text-slate-400">気軽に買える満足ケーキ</div>
-                            </div>
+                <div class="quiz-step hidden" data-step="3">
+                    <h4 class="text-sm font-bold text-gold-300 mb-3">Q3. 一緒に合わせたい飲み物は？</h4>
+                    <div class="space-y-2">
+                        <button onclick="selectAnswer(3, 'coffee')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>エスプレッソや濃いめのブラックコーヒー</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
-                        <button onclick="answerQuiz('budget', 'luxury')" class="p-4 rounded-2xl border-2 border-slate-100 hover:border-rose-400 hover:bg-rose-50/40 font-bold text-slate-700 text-left transition flex items-center gap-3">
-                            <span class="text-2xl">👑</span>
-                            <div>
-                                <div class="text-sm">特別なお祝い・高級スイーツ（1,500円〜）</div>
-                                <div class="text-xs font-normal text-slate-400">高級パティスリー・限定品</div>
-                            </div>
+                        <button onclick="selectAnswer(3, 'wine')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>赤ワインやウイスキー、ブランデー</span>
+                            <span class="text-gold-400">➔</span>
+                        </button>
+                        <button onclick="selectAnswer(3, 'tea')" class="quiz-opt w-full text-left p-3.5 bg-cocoa-900 border border-cocoa-700 hover:border-gold-500 rounded-xl text-xs sm:text-sm transition flex items-center justify-between">
+                            <span>香りの良いストレートティーやアールグレイ</span>
+                            <span class="text-gold-400">➔</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Result Screen -->
-                <div id="quiz-result" class="quiz-step hidden space-y-6">
-                    <div class="p-3 bg-amber-50 text-amber-800 rounded-2xl border border-amber-200 text-xs font-bold inline-block">
-                        ✨ 診断完了！あなたに最適なお店はこちら
+                <!-- Quiz Results Step -->
+                <div id="quiz-results" class="hidden space-y-4">
+                    <div class="bg-gold-500/10 border border-gold-500/30 p-4 rounded-2xl text-center">
+                        <span class="text-xs text-gold-400 uppercase font-bold">Diagnosed Match</span>
+                        <h4 class="text-lg font-bold text-white mt-1">あなたにおすすめのTOP3ショップ</h4>
                     </div>
 
-                    <div id="quiz-result-card" class="text-left">
-                        <!-- Result shop card injected here -->
+                    <div id="diagnosis-results-list" class="space-y-3">
+                        <!-- Dynamic result cards -->
                     </div>
 
-                    <div class="flex gap-3 justify-center pt-2">
-                        <button onclick="resetQuiz()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition">
-                            もう一度診断する
-                        </button>
-                        <button onclick="switchTab('explore')" class="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shadow-md">
-                            お店を全部探す
-                        </button>
-                    </div>
+                    <button onclick="resetQuiz()" class="w-full bg-cocoa-900 hover:bg-cocoa-800 text-cocoa-300 text-xs py-2.5 rounded-xl border border-cocoa-700 mt-4">もう一度診断する</button>
                 </div>
-
             </div>
-        </div>
-
-        <!-- ================= TAB 3: FAVORITES ================= -->
-        <div id="tab-favorites" class="tab-content hidden space-y-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-800">お気に入りのお店</h2>
-                    <p class="text-xs text-slate-500 mt-1">保存した気になるケーキ屋さんリスト</p>
-                </div>
-                <span id="fav-counter-text" class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
-                    0 件保存中
-                </span>
-            </div>
-
-            <div id="favorites-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Favorites injected here -->
-            </div>
-
-            <div id="favorites-empty" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
-                <div class="text-5xl mb-3">💔</div>
-                <h3 class="text-base font-bold text-slate-700">お気に入りがまだありません</h3>
-                <p class="text-xs text-slate-400 mt-1">お店のカードにあるハートボタンを押すと、ここに保存されます。</p>
-                <button onclick="switchTab('explore')" class="mt-4 px-5 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-rose-700 transition">
-                    ケーキ屋さんを探す
-                </button>
-            </div>
-        </div>
-
-        <!-- ================= TAB 4: CAKE LOG / DIARY ================= -->
-        <div id="tab-log" class="tab-content hidden space-y-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-800">ケーキ巡り日記</h2>
-                    <p class="text-xs text-slate-500 mt-1">食べた感動や記録を残せるマイケーキログ</p>
-                </div>
-                <button onclick="openAddLogModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> 新しい日記を書く
-                </button>
-            </div>
-
-            <div id="cake-log-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Log cards injected here -->
-            </div>
-
-            <div id="cake-log-empty" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
-                <div class="text-5xl mb-3">📖</div>
-                <h3 class="text-base font-bold text-slate-700">日記の記録がまだありません</h3>
-                <p class="text-xs text-slate-400 mt-1">訪れたお店で食べた美味しいケーキの記録をつけてみましょう！</p>
-                <button onclick="openAddLogModal()" class="mt-4 px-5 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-rose-700 transition">
-                    日記を記録する
-                </button>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- ================= SHOP DETAIL MODAL ================= -->
-    <div id="shop-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100">
-            <!-- Close Button -->
-            <button onclick="closeShopModal()" class="absolute top-4 right-4 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition backdrop-blur-md">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <!-- Modal Body injected via JS -->
-            <div id="modal-content"></div>
         </div>
     </div>
 
-    <!-- ================= ADD LOG MODAL ================= -->
-    <div id="add-log-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-rose-500"></i> ケーキ日記を書き込む
-                </h3>
-                <button onclick="closeAddLogModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form id="cake-log-form" onsubmit="saveCakeLog(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">お店の名前</label>
-                    <input type="text" id="log-shop-name" required placeholder="例: パティスリー アトリエ 自由が丘" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">食べたケーキ・メニュー名</label>
-                    <input type="text" id="log-cake-name" required placeholder="例: プレミアム苺ショートケーキ" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">訪問日</label>
-                        <input type="date" id="log-date" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">マイ評価</label>
-                        <select id="log-rating" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                            <option value="5">★★★★★ (絶品!)</option>
-                            <option value="4">★★★★☆ (とても美味)</option>
-                            <option value="3">★★★☆☆ (満足)</option>
-                            <option value="2">★★☆☆☆ (普通)</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">写真URL (任意)</label>
-                    <input type="url" id="log-image" placeholder="https://..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-400 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">感想メモ</label>
-                    <textarea id="log-memo" rows="3" placeholder="スポンジがふわふわでイチゴがとても甘かった！コーヒーとの相性抜群。" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-400 focus:outline-none"></textarea>
-                </div>
-
-                <div class="flex gap-2 pt-2 justify-end">
-                    <button type="button" onclick="closeAddLogModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100">
-                        キャンセル
-                    </button>
-                    <button type="submit" class="px-5 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-rose-700">
-                        日記を保存
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2 text-xs font-bold transition-all duration-300 transform translate-y-4">
-        <span id="toast-icon">✨</span>
-        <span id="toast-msg">メッセージ</span>
-    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
     <script>
-        /* MOCK DATASET FOR TOKYO CAKE SHOPS */
-        const SHOPS_DATA = [
+        // Detailed Shops Dataset
+        const shopsData = [
             {
-                id: 'shop-1',
-                name: 'パティスリー リュクス 自由が丘',
-                area: '自由が丘',
-                address: '東京都目黒区自由が丘1-28-8',
-                lat: 35.6074,
-                lng: 139.6685,
-                rating: 4.8,
-                reviewsCount: 342,
-                avgPrice: 780,
-                image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['ショートケーキ', 'タルト', '焼き菓子'],
-                features: { eatin: true, takeout: true, reservation: true },
-                badge: '一番人気',
-                description: '北海道産極上生クリームと旬の契約農家イチゴを惜しみなく使用したショートケーキの金字塔。優雅なサロンで贅沢なティータイムを。',
-                popularItems: [
-                    { name: '王道あまおう苺のショート', price: 850, isRecommended: true },
-                    { name: 'ピスタチオとフランボワーズのタルト', price: 790, isRecommended: false },
-                    { name: '特製発酵バターフィナンシェ', price: 320, isRecommended: false }
-                ],
-                hours: '11:00 - 19:00 (火曜定休)',
-                phone: '03-5701-XXXX'
-            },
-            {
-                id: 'shop-2',
-                name: '銀座 メゾン・ド・ショコラ＆サロン',
-                area: '銀座',
-                address: '東京都中央区銀座5-7-10',
-                lat: 35.6712,
-                lng: 139.7650,
-                rating: 4.7,
-                reviewsCount: 512,
-                avgPrice: 1250,
-                image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['チョコレート', '焼き菓子', 'パフェ'],
-                features: { eatin: true, takeout: true, reservation: true },
-                badge: '名店',
-                description: 'ベルギー産最高級グランクリュショコラを使用した極上のガトーショコラ。銀座の洗練された空間で大人の濃厚スイーツを楽しめます。',
-                popularItems: [
-                    { name: 'プレミアム・オペラ・ショコラ', price: 1100, isRecommended: true },
-                    { name: '季節のチョコ＆ベリースペシャリテパフェ', price: 2400, isRecommended: true }
-                ],
-                hours: '11:30 - 20:00 (無休)',
-                phone: '03-3572-XXXX'
-            },
-            {
-                id: 'shop-3',
-                name: 'モンブラン専門店 栗の極み 表参道',
-                area: '表参道',
-                address: '東京都渋谷区神宮前4-12-10',
-                lat: 35.6672,
-                lng: 139.7092,
+                id: 'kens-cafe',
+                name: 'ケンズカフェ東京 総本店',
+                area: '新宿御苑前',
+                category: 'ガトーショコラ',
+                signature: '特撰ガトーショコラ',
+                price: 3500,
+                priceDisplay: '¥3,500 / 1本',
                 rating: 4.9,
-                reviewsCount: 680,
-                avgPrice: 1800,
-                image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['モンブラン', 'パフェ'],
-                features: { eatin: true, takeout: false, reservation: true },
-                badge: '行列店',
-                description: '注文を受けてから目の前で1mmの極細マロンペーストを搾り出す生モンブラン。和栗本来の芳醇な香りとエアリーな口溶けが話題。',
-                popularItems: [
-                    { name: '丹波栗の生絞り和栗モンブラン', price: 1980, isRecommended: true },
-                    { name: 'モンブラン氷パフェ (夏季限定)', price: 1850, isRecommended: false }
-                ],
-                hours: '10:00 - 18:00 (水曜定休)',
-                phone: '03-6434-XXXX'
+                cocoaRichness: 5, // 1 to 5
+                image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80',
+                description: '世界最高峰の専用チョコレート「DOMORI」の創業者マルコ・ドミニ氏が独自開発した「KEN\'S BLEND CACAO」を贅沢に使用。小麦粉・生クリーム不使用の完全グルテンフリー。常温でテリーヌ、温めてフォンダンショコラ、冷やすと生チョコのような多角的な味わい。',
+                station: '東京メトロ丸ノ内線「新宿御苑前駅」2番出口より徒歩3分',
+                address: '東京都新宿区新宿1-23-3 御苑コーポビアネーズ1F',
+                hours: '10:00～19:00',
+                holidays: '土曜・日曜・祝日',
+                tags: ['グルテンフリー', '手土産推奨', '予約推奨'],
+                pairing: 'エスプレッソ、フルボディ赤ワイン',
+                tempTip: '冷やして生チョコ感、温めてとろ〜り食感',
+                radar: [95, 80, 90, 85, 98], // [濃厚さ, 苦味, 口どけ, 香り, ギフト度]
+                reviews: [
+                    { author: 'ショコラフリーク', rating: 5, comment: '冷やして食べると濃厚な生チョコのようで最高。手土産に持っていくと必ず喜ばれます。' },
+                    { author: 'スイーツ女子', rating: 5, comment: '少しレンジで温めたときの中のとろけ出し方が感動的でした！' }
+                ]
             },
             {
-                id: 'shop-4',
-                name: '吉祥寺 フルーツタルト工房 ル・フルール',
-                area: '吉祥寺',
-                address: '東京都武蔵野市吉祥寺本町2-14-5',
-                lat: 35.7042,
-                lng: 139.5781,
-                rating: 4.6,
-                reviewsCount: 210,
-                avgPrice: 680,
-                image: 'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['タルト', 'ショートケーキ'],
-                features: { eatin: true, takeout: true, reservation: false },
-                badge: 'テイクアウト◎',
-                description: '毎朝市場から届く新鮮なフルーツを宝石のように敷き詰めたタルト専門店。サクサクの自家製サブレ生地とカスタードが絶妙。',
-                popularItems: [
-                    { name: 'シャインマスカットと苺の宝石タルト', price: 780, isRecommended: true },
-                    { name: '濃厚完熟マンゴータルト', price: 720, isRecommended: false }
-                ],
-                hours: '10:30 - 19:30 (月曜定休)',
-                phone: '0422-22-XXXX'
-            },
-            {
-                id: 'shop-5',
-                name: 'フロマージュ＆カフェ 新宿ラボ',
-                area: '新宿',
-                address: '東京都新宿区新宿3-18-1',
-                lat: 35.6912,
-                lng: 139.7010,
-                rating: 4.5,
-                reviewsCount: 195,
-                avgPrice: 650,
-                image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['チーズケーキ'],
-                features: { eatin: true, takeout: true, reservation: false },
-                badge: 'SNSで話題',
-                description: 'とろける食感バスクチーズケーキと濃厚ニューヨークスタイルの食べ比べができるチーズケーキ専門店。コーヒーとの相性抜群。',
-                popularItems: [
-                    { name: '焦がしバスクチーズケーキ', price: 680, isRecommended: true },
-                    { name: 'ピスタチオとレアチーズの2層ケーキ', price: 720, isRecommended: false }
-                ],
-                hours: '11:00 - 21:00 (無休)',
-                phone: '03-5363-XXXX'
-            },
-            {
-                id: 'shop-6',
-                name: 'サロン・ド・パルフェ 六本木ヒルズ',
-                area: '六本木',
-                address: '東京都港区六本木6-10-1',
-                lat: 35.6605,
-                lng: 139.7292,
+                id: 'bubo-barcelona',
+                name: 'bubó BARCELONA 表参道店',
+                area: '表参道・神宮前',
+                category: 'ムース',
+                signature: 'シャビーナ (Xabina)',
+                price: 950,
+                priceDisplay: '¥950 / 1ピース',
                 rating: 4.8,
-                reviewsCount: 420,
-                avgPrice: 2200,
-                image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['パフェ', 'ショートケーキ'],
-                features: { eatin: true, takeout: false, reservation: true },
-                badge: '高級サロン',
-                description: '夜パフェやペアリングカクテルも楽しめる大人のためのハイエンドパティスリー。夜景を見ながら至高のデザート体験を。',
-                popularItems: [
-                    { name: '大人のナイト・いちごパフェ', price: 2400, isRecommended: true },
-                    { name: 'トリュフ香るクラシックガトー', price: 1600, isRecommended: false }
-                ],
-                hours: '13:00 - 23:00 (月曜定休)',
-                phone: '03-6406-XXXX'
+                cocoaRichness: 4.5,
+                image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80',
+                description: 'パティシエの世界大会「クープ・デュ・モンド・ドゥ・ラ・パティスリー」にて「ベストチョコレートケーキ」を受賞した世界一のケーキ。天然バニラシロップを染み込ませたスポンジと、スパイスを隠し味にしたオリーブオイル生地、濃厚チョコムースの美しい多重奏。',
+                station: '東京メトロ「表参道駅」A1出口より徒歩3分',
+                address: '東京都渋谷区神宮前5-6-5 Path表参道B棟',
+                hours: '12:00～20:00 (カフェ L.O. 19:30)',
+                holidays: '火曜日（祝日の場合は営業）',
+                tags: ['イートイン可', '手土産推奨', '映えスイーツ'],
+                pairing: 'アールグレイティー、スパークリングワイン',
+                tempTip: '冷やした状態で口の中の温度変化を楽しむ',
+                radar: [88, 75, 95, 92, 90],
+                reviews: [
+                    { author: 'カフェ巡り隊', rating: 5, comment: '見た目の美しさはもちろん、スパイスの芳醇な香りとバニラ・チョコの調和が完璧です。' }
+                ]
             },
             {
-                id: 'shop-7',
-                name: 'ベイクハウス＆マカロン 目黒川',
-                area: '目黒',
-                address: '東京都目黒区中目黒1-15-8',
-                lat: 35.6442,
-                lng: 139.6988,
+                id: 'minimal-yoyogi',
+                name: 'Minimal - Bean to Bar Chocolate - (代々木上原)',
+                area: '代々木上原',
+                category: 'Bean to Bar',
+                signature: '生ガトーショコラ -PRIME-',
+                price: 3650,
+                priceDisplay: '¥3,650 / 1本',
+                rating: 4.7,
+                cocoaRichness: 4.8,
+                image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&q=80',
+                description: '世界中のカカオ農園から直接買い付けたカカオ豆と砂糖のみで仕上げるクラフトガトーショコラ。火入れの温度と時間をミリ単位でコントロールし、カカオ特有のフルーティーな酸味とナッツのような香ばしさをダイレクトに抽出した唯一無二の味わい。',
+                station: '小田急線・東京メトロ「代々木上原駅」徒歩3分',
+                address: '東京都渋谷区上原1-34-5',
+                hours: '11:00～19:00',
+                holidays: '無休',
+                tags: ['Bean to Bar', 'イートイン可', '手土産推奨'],
+                pairing: '浅煎りハンドドリップコーヒー、シングルモルトウイスキー',
+                tempTip: '少し常温に戻すとカカオの香味が爆発的に広がります',
+                radar: [90, 88, 85, 98, 92],
+                reviews: [
+                    { author: 'カカオオタク', rating: 5, comment: 'チョコレートにこんな果実味があるのかと衝撃を受けました。コーヒーとの相性が抜群です。' }
+                ]
+            },
+            {
+                id: 'delimmo-hibiya',
+                name: 'Pâtisserie & Café DEL\'IMMO 日比谷',
+                area: '有楽町・日比谷',
+                category: 'ムース',
+                signature: 'ラストショコラ / ショコラパフェ',
+                price: 880,
+                priceDisplay: '¥880 / 1ピース',
                 rating: 4.6,
-                reviewsCount: 160,
-                avgPrice: 550,
-                image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80',
-                gallery: [
-                    'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
-                ],
-                categories: ['焼き菓子', 'タルト'],
-                features: { eatin: false, takeout: true, reservation: false },
-                badge: 'ギフト推奨',
-                description: '目黒川沿いに佇む小さな焼き菓子工房。外はサクッ中はしっとりのトゥンカロンや焼きたてカヌレ、フィナンシェが絶品。',
-                popularItems: [
-                    { name: '自家製カヌレ 6個セット', price: 1650, isRecommended: true },
-                    { name: 'カラフルマカロンBOX', price: 1800, isRecommended: false }
-                ],
-                hours: '10:00 - 18:00 (水・木定休)',
-                phone: '03-6303-XXXX'
+                cocoaRichness: 4.2,
+                image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80',
+                description: 'ショコラティエ江口和明氏が手がける「スイーツとドリンクのペアリング」を追求したパティスリー＆カフェ。カカオのパーセンテージや産地に拘った多層構造のケーキと、ソムリエ提案のワインやウイスキーのマリアージュが楽しめます。',
+                station: '東京メトロ・都営地下鉄「日比谷駅」直結（東京ミッドタウン日比谷B1F）',
+                address: '東京都千代田区有楽町1-1-2 東京ミッドタウン日比谷 B1F',
+                hours: '11:00～23:00 (L.O. 22:00)',
+                holidays: '施設休館日に準ずる',
+                tags: ['イートイン可', '予約推奨', '夜カフェ'],
+                pairing: 'ウイスキーハーフロック、深煎りカフェラテ',
+                tempTip: 'イートインでは温かいショコラソースをかけるデセールもおすすめ',
+                radar: [82, 70, 92, 88, 85],
+                reviews: [
+                    { author: '日比谷OL', rating: 4.5, comment: '仕事終わりの夜カフェ利用に最高。パフェもケーキもカカオのクオリティが高い！' }
+                ]
+            },
+            {
+                id: 'theobroma-tomigaya',
+                name: 'ミュゼ・ドゥ・ショコラ テオブロマ',
+                area: '渋谷・富ヶ谷',
+                category: 'ガトーショコラ',
+                signature: 'サンフォニー (Symphonie)',
+                price: 820,
+                priceDisplay: '¥820 / 1ピース',
+                rating: 4.8,
+                cocoaRichness: 4.6,
+                image: 'https://images.unsplash.com/photo-1605807646983-377bc5a76493?auto=format&fit=crop&q=80',
+                description: '日本のショコラティエ界のレジェンド、土屋公二シェフの「カカオのミュージアム」。極限まで口溶けを追求したビターガナッシュと軽いビスキュイの交響曲（サンフォニー）。クラシックかつ気品溢れる仕上がりの王道ショコラケーキ。',
+                station: '千代田線「代々木八幡駅」徒歩6分 / 小田急線「代々木八幡駅」徒歩6分',
+                address: '東京都渋谷区富ヶ谷1-14-9 グリーンコアL渋谷 1F',
+                hours: '10:00～19:00',
+                holidays: '無休（年末年始を除く）',
+                tags: ['イートイン可', '手土産推奨', '伝統派名店'],
+                pairing: 'ダージリンティー、ボルドー赤ワイン',
+                tempTip: '少し冷やした状態がガナッシュの舌触りを最も滑らかにします',
+                radar: [92, 82, 90, 88, 94],
+                reviews: [
+                    { author: 'ショコラ愛好家', rating: 5, comment: '長年通っていますが、カカオの深みと上品な甘さはさすが土屋シェフの味です。' }
+                ]
+            },
+            {
+                id: 'palet-dor-tokyo',
+                name: 'ショコラティエ パレ ド オール 東京',
+                area: '丸の内・東京駅',
+                category: 'テリーヌ',
+                signature: 'アルザシアン・ショコラ',
+                price: 920,
+                priceDisplay: '¥920 / 1ピース',
+                rating: 4.7,
+                cocoaRichness: 4.7,
+                image: 'https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&q=80',
+                description: '三枝俊介シェフが丸の内新丸ビルに構える高級サロン。自社工房でカカオ豆選別・焙煎から手掛ける自家製チョコレートを全面に使用。濃厚でしっとりとしたチョコレート生地と甘酸っぱいベリーのアクセントが贅沢。',
+                station: 'JR「東京駅」丸の内北口より徒歩1分（新丸ビル1F）',
+                address: '東京都千代田区丸の内1-5-1 新丸の内ビルディング 1F',
+                hours: '11:00～21:00 (日・祝 11:00～20:00)',
+                holidays: '新丸ビルに準ずる',
+                tags: ['イートイン可', '手土産推奨', '景観抜群'],
+                pairing: 'シャンパーニュ、高級エスプレッソ',
+                tempTip: 'サロンの落ち着いた空間でシャンパンと合わせるのが至高',
+                radar: [94, 85, 88, 92, 95],
+                reviews: [
+                    { author: '丸の内ビジネスマン', rating: 5, comment: '東京駅直結でアクセスも良く、手土産にも打ち合わせにも重宝しています。' }
+                ]
+            },
+            {
+                id: 'dandelion-kuramae',
+                name: 'ダンデライオン・チョコレート ファクトリー＆カフェ蔵前',
+                area: '蔵前・浅草',
+                category: 'Bean to Bar',
+                signature: 'クラフトガトーショコラ & スモア',
+                price: 750,
+                priceDisplay: '¥750 / 1ピース',
+                rating: 4.6,
+                cocoaRichness: 4.0,
+                image: 'https://images.unsplash.com/photo-1548848221-0c2e497ed557?auto=format&fit=crop&q=80',
+                description: 'サンフランシスコ発のBean to Bar専門店。1階の開放的な製造ファクトリーで作られる、シングルオリジンカカオ豆（単一産地）の魅力を生かしたカカオ感たっぷりのケーキ。注文を受けてから表面を炙る「スモア」も大人気。',
+                station: '都営浅草線「蔵前駅」徒歩3分 / 都営大江戸線「蔵前駅」徒歩7分',
+                address: '東京都台東区蔵前4-14-6',
+                hours: '10:00～19:00 (L.O. 18:30)',
+                holidays: '不定休',
+                tags: ['Bean to Bar', 'イートイン可', 'テラス席あり'],
+                pairing: 'カカオフルーツスムージー、カフェラテ',
+                tempTip: '温かいドリンクと一緒に味わうとカカオの余韻が長続きします',
+                radar: [80, 72, 85, 96, 88],
+                reviews: [
+                    { author: '蔵前散策好き', rating: 4.5, comment: 'ファクトリーの香ばしいにおいの中で食べる出来立てショコラスイーツは格別です。' }
+                ]
+            },
+            {
+                id: 'belamer-jiyugaoka',
+                name: 'ベルアメール 自由が丘店 (Chocolat BEL AMER)',
+                area: '自由が丘',
+                category: 'ガトーショコラ',
+                signature: 'プレミアムショコラショート / パレショコラ',
+                price: 780,
+                priceDisplay: '¥780 / 1ピース',
+                rating: 4.5,
+                cocoaRichness: 4.1,
+                image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&q=80',
+                description: '「日本に合うショコラ」を目指し、気温・湿度の変化が激しい日本の気候に合わせた緻密なレシピで作られる名店。カフェ併設の自由が丘店では、ショコラティエ特製のデセールや季節限定の濃厚ショコラショートが楽しめます。',
+                station: '東急東横線・大井町線「自由が丘駅」正面口より徒歩3分',
+                address: '東京都目黒区自由が丘2-9-4 岡ビル 1F',
+                hours: '10:30～19:30 (カフェ L.O. 19:00)',
+                holidays: '無休（年末年始を除く）',
+                tags: ['イートイン可', '手土産推奨', '季節限定あり'],
+                pairing: 'ブレンドコーヒー、セイロンティー',
+                tempTip: 'スポンジと生チョコクリームのふわっと解ける軽やかさを楽しむ',
+                radar: [82, 68, 92, 84, 91],
+                reviews: [
+                    { author: '自由が丘マダム', rating: 4.5, comment: '自由が丘でショコラといえばここ。カフェスペースも明るくて落ち着けます。' }
+                ]
             }
         ];
 
-        /* APP STATE */
-        let activeCategory = 'all';
-        let currentViewMode = 'split'; // 'split' or 'map'
-        let favorites = JSON.parse(localStorage.getItem('sweetspot_favs') || '[]');
-        let cakeLogs = JSON.parse(localStorage.getItem('sweetspot_logs') || '[]');
-        let map = null;
-        let mapMarkers = [];
+        // Global State variables
+        let currentCategory = 'all';
+        let currentTagFilters = [];
+        let searchQuery = '';
+        let sortOption = 'popular';
+        let wishlist = JSON.parse(localStorage.getItem('choco_wishlist') || '[]');
+        let comparisonList = [];
+        let radarChartInstance = null;
+        let currentActiveShopId = null;
 
-        /* QUIZ STATE */
-        let quizAnswers = { flavor: '', style: '', budget: '' };
+        // Quiz State
+        let quizAnswers = { step1: '', step2: '', step3: '' };
 
-        // INITIALIZATION
-        window.addEventListener('DOMContentLoaded', () => {
-            initLeafletMap();
-            applyFilters();
-            updateFavBadge();
-            renderCakeLogs();
-
-            // Default date input for log form
-            const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('log-date');
-            if (dateInput) dateInput.value = today;
+        document.addEventListener('DOMContentLoaded', () => {
+            renderShops();
+            updateWishlistUI();
+            updateCompareUI();
+            renderPairingGuide();
         });
 
-        // TAB SWITCHING
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-rose-50', 'text-rose-600', 'font-bold');
-                btn.classList.add('text-slate-600', 'font-medium');
-            });
+        // Switch View Logic (Grid / Compare / Pairing)
+        function switchView(viewName) {
+            document.getElementById('view-grid').classList.add('hidden');
+            document.getElementById('view-compare').classList.add('hidden');
+            document.getElementById('view-pairing').classList.add('hidden');
 
-            const targetTab = document.getElementById(`tab-${tabName}`);
-            const targetNav = document.getElementById(`nav-${tabName}`);
+            document.getElementById('view-tab-grid').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition flex items-center space-x-2 text-cocoa-400 hover:text-cocoa-200";
+            document.getElementById('view-tab-compare').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition flex items-center space-x-2 text-cocoa-400 hover:text-cocoa-200";
+            document.getElementById('view-tab-pairing').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition flex items-center space-x-2 text-cocoa-400 hover:text-cocoa-200";
 
-            if (targetTab) targetTab.classList.remove('hidden');
-            if (targetNav) {
-                targetNav.classList.remove('text-slate-600', 'font-medium');
-                targetNav.classList.add('bg-rose-50', 'text-rose-600', 'font-bold');
-            }
-
-            // Invalidate map size when switching back to explore tab
-            if (tabName === 'explore' && map) {
-                setTimeout(() => map.invalidateSize(), 200);
-            }
-            if (tabName === 'favorites') {
-                renderFavorites();
-            }
-            if (tabName === 'log') {
-                renderCakeLogs();
+            if (viewName === 'grid') {
+                document.getElementById('view-grid').classList.remove('hidden');
+                document.getElementById('filter-container').classList.remove('hidden');
+                document.getElementById('view-tab-grid').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-2 bg-gold-500 text-cocoa-950 shadow";
+            } else if (viewName === 'compare') {
+                document.getElementById('view-compare').classList.remove('hidden');
+                document.getElementById('filter-container').classList.add('hidden');
+                document.getElementById('view-tab-compare').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-2 bg-gold-500 text-cocoa-950 shadow";
+                renderComparisonTable();
+            } else if (viewName === 'pairing') {
+                document.getElementById('view-pairing').classList.remove('hidden');
+                document.getElementById('filter-container').classList.add('hidden');
+                document.getElementById('view-tab-pairing').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-2 bg-gold-500 text-cocoa-950 shadow";
             }
         }
 
-        // LEAFLET MAP INIT
-        function initLeafletMap() {
-            // Center around Tokyo area
-            map = L.map('leaflet-map', {
-                zoomControl: true,
-                scrollWheelZoom: false
-            }).setView([35.6700, 139.7000], 12);
-
-            // Clean, elegant map tiles
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                maxZoom: 18
-            }).addTo(map);
-        }
-
-        // FILTER & SEARCH LOGIC
-        function toggleCategory(cat) {
-            activeCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                const btnCat = btn.getAttribute('data-cat');
-                if (btnCat === cat) {
-                    btn.className = "cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold border whitespace-nowrap transition bg-rose-600 text-white border-rose-600 shadow-sm";
-                } else {
-                    btn.className = "cat-btn px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:border-rose-300 whitespace-nowrap transition";
-                }
-            });
-            applyFilters();
-        }
-
-        function handleSearch() {
-            const input = document.getElementById('search-input').value;
-            const clearBtn = document.getElementById('clear-search');
-            if (input.trim().length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
-            applyFilters();
-        }
-
-        function clearSearch() {
-            document.getElementById('search-input').value = '';
-            document.getElementById('clear-search').classList.add('hidden');
-            applyFilters();
-        }
-
-        function resetAllFilters() {
-            activeCategory = 'all';
-            toggleCategory('all');
-            document.getElementById('search-input').value = '';
-            document.getElementById('area-select').value = 'all';
-            document.getElementById('filter-eatin').checked = false;
-            document.getElementById('filter-takeout').checked = false;
-            document.getElementById('filter-reservation').checked = false;
-            document.getElementById('sort-select').value = 'rating';
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const searchText = document.getElementById('search-input').value.trim().toLowerCase();
-            const area = document.getElementById('area-select').value;
-            const filterEatin = document.getElementById('filter-eatin').checked;
-            const filterTakeout = document.getElementById('filter-takeout').checked;
-            const filterReservation = document.getElementById('filter-reservation').checked;
-            const sortBy = document.getElementById('sort-select').value;
-
-            let filtered = SHOPS_DATA.filter(shop => {
+        function renderShops() {
+            const gridContainer = document.getElementById('shops-grid');
+            const emptyState = document.getElementById('empty-state');
+            const filterSummary = document.getElementById('filter-summary');
+            
+            let filtered = shopsData.filter(shop => {
                 // Category match
-                if (activeCategory !== 'all' && !shop.categories.includes(activeCategory)) {
-                    return false;
-                }
-                // Area match
-                if (area !== 'all' && shop.area !== area) {
-                    return false;
-                }
-                // Feature match
-                if (filterEatin && !shop.features.eatin) return false;
-                if (filterTakeout && !shop.features.takeout) return false;
-                if (filterReservation && !shop.features.reservation) return false;
+                const matchCategory = (currentCategory === 'all') || 
+                    (currentCategory === 'ガトーショコラ' && shop.category === 'ガトーショコラ') ||
+                    (currentCategory === 'ムース' && shop.category === 'ムース') ||
+                    (currentCategory === 'Bean to Bar' && shop.category === 'Bean to Bar') ||
+                    (currentCategory === 'テリーヌ' && shop.category === 'テリーヌ') ||
+                    (currentCategory === 'カフェ' && shop.tags.includes('イートイン可'));
+
+                // Tag filters match
+                const matchTags = currentTagFilters.every(tag => shop.tags.includes(tag));
 
                 // Search query match
-                if (searchText) {
-                    const matchName = shop.name.toLowerCase().includes(searchText);
-                    const matchArea = shop.area.toLowerCase().includes(searchText);
-                    const matchAddr = shop.address.toLowerCase().includes(searchText);
-                    const matchCats = shop.categories.some(c => c.toLowerCase().includes(searchText));
-                    const matchItems = shop.popularItems.some(i => i.name.toLowerCase().includes(searchText));
-                    if (!matchName && !matchArea && !matchAddr && !matchCats && !matchItems) {
-                        return false;
-                    }
-                }
+                const matchSearch = searchQuery === '' || 
+                    shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    shop.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    shop.signature.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    shop.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-                return true;
+                return matchCategory && matchTags && matchSearch;
             });
 
             // Sorting
             filtered.sort((a, b) => {
-                if (sortBy === 'rating') return b.rating - a.rating;
-                if (sortBy === 'reviews') return b.reviewsCount - a.reviewsCount;
-                if (sortBy === 'price-asc') return a.avgPrice - b.avgPrice;
-                if (sortBy === 'price-desc') return b.avgPrice - a.avgPrice;
+                if (sortOption === 'popular') return b.rating - a.rating;
+                if (sortOption === 'richness') return b.cocoaRichness - a.cocoaRichness;
+                if (sortOption === 'rating') return b.rating - a.rating;
+                if (sortOption === 'price-asc') return a.price - b.price;
+                if (sortOption === 'price-desc') return b.price - a.price;
                 return 0;
             });
 
-            // Update DOM & Map
-            renderShopCards(filtered);
-            updateMapMarkers(filtered);
-            document.getElementById('results-count').textContent = `該当 ${filtered.length} 件`;
-        }
-
-        // RENDER SHOP CARDS
-        function renderShopCards(shops) {
-            const container = document.getElementById('shop-cards-list');
-            const noResults = document.getElementById('no-results');
-
-            if (!shops || shops.length === 0) {
-                container.innerHTML = '';
-                noResults.classList.remove('hidden');
-                return;
+            // Summary bar visibility
+            document.getElementById('shop-count').textContent = filtered.length;
+            if (currentCategory !== 'all' || currentTagFilters.length > 0 || searchQuery !== '') {
+                filterSummary.classList.remove('hidden');
+            } else {
+                filterSummary.classList.add('hidden');
             }
 
-            noResults.classList.add('hidden');
-            container.innerHTML = shops.map(shop => {
-                const isFav = favorites.includes(shop.id);
+            if (filtered.length === 0) {
+                gridContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Render Card HTML
+            gridContainer.innerHTML = filtered.map(shop => {
+                const isWished = wishlist.includes(shop.id);
+                const isCompared = comparisonList.includes(shop.id);
+
                 return `
-                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col justify-between">
+                <div class="group bg-cocoa-900/60 hover:bg-cocoa-900 border border-cocoa-800 hover:border-gold-500/50 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col justify-between">
                     <div>
-                        <!-- Image Container -->
-                        <div class="relative h-48 overflow-hidden bg-slate-100 cursor-pointer" onclick="openShopModal('${shop.id}')">
-                            <img src="${shop.image}" alt="${shop.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80'">
+                        <!-- Card Image Header -->
+                        <div class="relative h-52 w-full overflow-hidden">
+                            <img src="${shop.image}" alt="${shop.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-cocoa-950 via-transparent to-transparent opacity-80"></div>
                             
                             <!-- Badges -->
-                            <div class="absolute top-3 left-3 flex gap-1.5 flex-wrap">
-                                <span class="bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm">
-                                    📍 ${shop.area}
-                                </span>
-                                ${shop.badge ? `<span class="bg-rose-500/90 backdrop-blur-md text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm">✨ ${shop.badge}</span>` : ''}
+                            <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                                <span class="bg-cocoa-950/80 backdrop-blur-md text-gold-400 font-bold text-xs px-2.5 py-1 rounded-full border border-cocoa-700">${shop.area}</span>
+                                <span class="bg-gold-500 text-cocoa-950 font-bold text-xs px-2.5 py-1 rounded-full">${shop.category}</span>
                             </div>
 
-                            <!-- Favorite Button -->
-                            <button onclick="event.stopPropagation(); toggleFavorite('${shop.id}')" class="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition text-rose-500">
-                                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart text-base"></i>
+                            <!-- Favorite button -->
+                            <button onclick="toggleWishlist('${shop.id}')" class="absolute top-3 right-3 p-2 rounded-full bg-cocoa-950/70 border border-cocoa-700 hover:scale-110 transition ${isWished ? 'text-red-500' : 'text-cocoa-300 hover:text-white'}">
+                                <svg class="w-4 h-4" fill="${isWished ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                             </button>
+
+                            <div class="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                                <div class="flex items-center space-x-1 text-gold-400 text-xs font-bold bg-cocoa-950/80 px-2.5 py-1 rounded-lg border border-cocoa-800">
+                                    <span>★</span>
+                                    <span>${shop.rating.toFixed(1)}</span>
+                                </div>
+                                <span class="text-xs text-cocoa-200 font-semibold bg-cocoa-950/80 px-2.5 py-1 rounded-lg border border-cocoa-800">${shop.priceDisplay}</span>
+                            </div>
                         </div>
 
                         <!-- Card Body -->
-                        <div class="p-4 space-y-2">
-                            <div class="flex items-center justify-between text-xs font-bold text-amber-500">
-                                <div class="flex items-center gap-1">
-                                    <i class="fa-solid fa-star"></i>
-                                    <span class="text-slate-800 text-sm font-extrabold">${shop.rating}</span>
-                                    <span class="text-slate-400 font-medium">(${shop.reviewsCount})</span>
+                        <div class="p-5">
+                            <h3 class="text-lg font-bold text-white group-hover:text-gold-300 transition line-clamp-1 mb-1">${shop.name}</h3>
+                            <div class="text-xs text-gold-400 font-semibold mb-3">看板: ${shop.signature}</div>
+
+                            <p class="text-xs text-cocoa-300 line-clamp-2 leading-relaxed mb-4">${shop.description}</p>
+
+                            <!-- Cocoa Richness Meter -->
+                            <div class="bg-cocoa-950 p-2.5 rounded-xl border border-cocoa-800/80 mb-4">
+                                <div class="flex justify-between text-[11px] text-cocoa-400 mb-1">
+                                    <span>カカオ濃厚度メーター</span>
+                                    <span class="text-gold-400 font-bold">${shop.cocoaRichness} / 5.0</span>
                                 </div>
-                                <span class="text-slate-600 font-extrabold">平均 ￥${shop.avgPrice.toLocaleString()}</span>
+                                <div class="w-full bg-cocoa-900 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-cocoa-500 to-gold-500 h-2 rounded-full" style="width: ${(shop.cocoaRichness / 5) * 100}%"></div>
+                                </div>
                             </div>
 
-                            <h3 onclick="openShopModal('${shop.id}')" class="text-base font-extrabold text-slate-800 group-hover:text-rose-600 transition cursor-pointer line-clamp-1">
-                                ${shop.name}
-                            </h3>
-
-                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                                ${shop.description}
-                            </p>
-
-                            <!-- Category Chips -->
-                            <div class="flex flex-wrap gap-1 pt-1">
-                                ${shop.categories.map(c => `<span class="cake-badge text-[10px] font-bold text-amber-900 px-2 py-0.5 rounded-md border border-amber-200/60">${c}</span>`).join('')}
+                            <!-- Tags -->
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${shop.tags.map(t => `<span class="text-[10px] bg-cocoa-950 text-cocoa-400 border border-cocoa-800 px-2 py-0.5 rounded-md">#${t}</span>`).join('')}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card Footer Actions -->
-                    <div class="px-4 pb-4 pt-1 border-t border-slate-100 flex items-center justify-between gap-2 mt-2">
-                        <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                            ${shop.features.eatin ? '<span title="イートイン可" class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">☕ イートイン</span>' : ''}
-                            ${shop.features.takeout ? '<span title="テイクアウト可" class="text-sky-600 bg-sky-50 px-2 py-0.5 rounded">🛍️ テイクアウト</span>' : ''}
-                        </div>
-                        <button onclick="openShopModal('${shop.id}')" class="text-xs font-extrabold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1">
-                            詳細を見る <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    <!-- Card Actions -->
+                    <div class="p-5 pt-0 grid grid-cols-2 gap-2">
+                        <button onclick="toggleCompare('${shop.id}')" class="w-full py-2 px-3 rounded-xl text-xs font-medium border transition ${isCompared ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-cocoa-950 text-cocoa-300 border-cocoa-800 hover:border-cocoa-600'}">
+                            ${isCompared ? '✓ 比較中' : '＋ 比較追加'}
+                        </button>
+                        <button onclick="openShopModal('${shop.id}')" class="w-full py-2 px-3 rounded-xl text-xs font-bold bg-gold-500/10 hover:bg-gold-500 text-gold-400 hover:text-cocoa-950 border border-gold-500/30 transition text-center">
+                            詳細を見る
                         </button>
                     </div>
                 </div>
@@ -976,408 +848,493 @@
             }).join('');
         }
 
-        // UPDATE MAP MARKERS
-        function updateMapMarkers(shops) {
-            if (!map) return;
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.textContent.includes(cat) || (cat === 'all' && btn.textContent === 'すべて')) {
+                    btn.className = "category-btn active border px-3 py-1.5 rounded-full text-xs font-medium transition bg-gold-500 text-cocoa-950 border-gold-400 font-bold";
+                } else {
+                    btn.className = "category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition";
+                }
+            });
+            renderShops();
+        }
 
-            // Clear existing markers
-            mapMarkers.forEach(m => map.removeLayer(m));
-            mapMarkers = [];
+        function toggleTagFilter(tag) {
+            const index = currentTagFilters.indexOf(tag);
+            if (index > -1) {
+                currentTagFilters.splice(index, 1);
+            } else {
+                currentTagFilters.push(tag);
+            }
+            
+            document.querySelectorAll('.tag-filter-btn').forEach(btn => {
+                const tagText = btn.textContent.replace('#', '');
+                if (currentTagFilters.includes(tagText)) {
+                    btn.className = "tag-filter-btn text-xs bg-gold-500/20 text-gold-300 border border-gold-500/50 px-2.5 py-1 rounded-lg transition font-bold";
+                } else {
+                    btn.className = "tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition";
+                }
+            });
+            renderShops();
+        }
 
-            if (shops.length === 0) return;
+        function handleSearch() {
+            const val = document.getElementById('search-input').value.trim();
+            searchQuery = val;
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (val.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderShops();
+        }
 
-            const bounds = L.latLngBounds();
+        function resetSearch() {
+            document.getElementById('search-input').value = '';
+            searchQuery = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            renderShops();
+        }
 
-            shops.forEach(shop => {
-                const customIcon = L.divIcon({
-                    className: 'custom-pin-wrapper',
-                    html: `<div class="custom-pin"><i class="fa-solid fa-cake-candles"></i></div>`,
-                    iconSize: [38, 38],
-                    iconAnchor: [19, 19]
-                });
+        function handleSortChange() {
+            sortOption = document.getElementById('sort-select').value;
+            renderShops();
+        }
 
-                const marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map);
+        function resetAllFilters() {
+            currentCategory = 'all';
+            currentTagFilters = [];
+            resetSearch();
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.className = btn.textContent === 'すべて' ? 
+                    "category-btn active border px-3 py-1.5 rounded-full text-xs font-medium transition bg-gold-500 text-cocoa-950 border-gold-400 font-bold" : 
+                    "category-btn border border-cocoa-800 bg-cocoa-900/60 text-cocoa-300 hover:border-cocoa-600 px-3 py-1.5 rounded-full text-xs font-medium transition";
+            });
+            document.querySelectorAll('.tag-filter-btn').forEach(btn => {
+                btn.className = "tag-filter-btn text-xs bg-cocoa-900/40 text-cocoa-400 border border-cocoa-800 hover:text-gold-400 px-2.5 py-1 rounded-lg transition";
+            });
+            renderShops();
+        }
 
-                // Popup HTML
-                const popupHtml = `
-                    <div class="p-1 max-w-[200px] text-center space-y-1">
-                        <img src="${shop.image}" class="w-full h-20 object-cover rounded-xl mb-1">
-                        <div class="font-extrabold text-xs text-slate-800">${shop.name}</div>
-                        <div class="text-[11px] text-amber-500 font-bold">★ ${shop.rating} (￥${shop.avgPrice.toLocaleString()})</div>
-                        <button onclick="openShopModal('${shop.id}')" class="w-full py-1 bg-rose-500 text-white rounded-lg text-[10px] font-bold mt-1 hover:bg-rose-600 transition">
-                            詳細・メニューを見る
-                        </button>
+        function toggleWishlist(shopId) {
+            const index = wishlist.indexOf(shopId);
+            const shop = shopsData.find(s => s.id === shopId);
+            if (index > -1) {
+                wishlist.splice(index, 1);
+                showToast(`「${shop.name}」をお気に入りから外しました`, 'info');
+            } else {
+                wishlist.push(shopId);
+                showToast(`「${shop.name}」をお気に入りに追加しました`, 'success');
+            }
+            localStorage.setItem('choco_wishlist', JSON.stringify(wishlist));
+            updateWishlistUI();
+            renderShops();
+        }
+
+        function updateWishlistUI() {
+            const badge = document.getElementById('wishlist-badge');
+            badge.textContent = wishlist.length;
+            if (wishlist.length > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            const container = document.getElementById('wishlist-items');
+            if (wishlist.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-cocoa-500 text-xs">
+                        お気に入り登録されたお店はありません。<br>気になるカードのハートマークを押して保存できます。
                     </div>
                 `;
-
-                marker.bindPopup(popupHtml);
-                mapMarkers.push(marker);
-                bounds.extend([shop.lat, shop.lng]);
-            });
-
-            // Adjust map view to fit markers
-            if (shops.length > 0) {
-                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+                return;
             }
+
+            const savedShops = shopsData.filter(s => wishlist.includes(s.id));
+            container.innerHTML = savedShops.map(s => `
+                <div class="bg-cocoa-900/80 border border-cocoa-800 rounded-2xl p-3 flex items-center space-x-3">
+                    <img src="${s.image}" class="w-14 h-14 rounded-xl object-cover shrink-0">
+                    <div class="flex-grow min-w-0">
+                        <h4 class="text-xs font-bold text-white truncate">${s.name}</h4>
+                        <div class="text-[11px] text-gold-400 truncate">${s.signature}</div>
+                        <div class="text-[10px] text-cocoa-400">${s.area}</div>
+                    </div>
+                    <button onclick="openShopModal('${s.id}')" class="text-xs bg-gold-500 text-cocoa-950 font-bold px-2.5 py-1.5 rounded-lg shrink-0">見る</button>
+                </div>
+            `).join('');
         }
 
-        // VIEW MODE TOGGLE (Grid vs Map Full Screen)
-        function toggleViewMode(mode) {
-            currentViewMode = mode;
-            const cardsWrapper = document.getElementById('shop-cards-wrapper');
-            const mapWrapper = document.getElementById('map-wrapper');
-            const gridBtn = document.getElementById('view-grid-btn');
-            const mapBtn = document.getElementById('view-map-btn');
+        function toggleWishlistDrawer() {
+            const drawer = document.getElementById('wishlist-drawer');
+            const panel = document.getElementById('wishlist-panel');
+            const backdrop = document.getElementById('wishlist-backdrop');
 
-            if (mode === 'map') {
-                cardsWrapper.classList.add('hidden');
-                mapWrapper.className = "lg:col-span-12 bg-white rounded-3xl border border-slate-200 p-2 shadow-md overflow-hidden";
-                gridBtn.className = "p-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition";
-                mapBtn.className = "p-1.5 rounded-lg text-xs font-bold transition bg-rose-500 text-white shadow-sm";
+            if (panel.classList.contains('translate-x-full')) {
+                drawer.classList.remove('pointer-events-none');
+                panel.classList.remove('translate-x-full');
+                backdrop.classList.remove('opacity-0');
             } else {
-                cardsWrapper.classList.remove('hidden');
-                mapWrapper.className = "lg:col-span-5 sticky top-20 bg-white rounded-3xl border border-slate-200 p-2 shadow-md overflow-hidden";
-                gridBtn.className = "p-1.5 rounded-lg text-xs font-bold transition bg-rose-500 text-white shadow-sm";
-                mapBtn.className = "p-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition";
+                panel.classList.add('translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => drawer.classList.add('pointer-events-none'), 300);
             }
-
-            setTimeout(() => {
-                if (map) map.invalidateSize();
-            }, 200);
         }
 
-        // SHOP DETAIL MODAL
+        function toggleCompare(shopId) {
+            const index = comparisonList.indexOf(shopId);
+            const shop = shopsData.find(s => s.id === shopId);
+            if (index > -1) {
+                comparisonList.splice(index, 1);
+                showToast(`比較リストから削除しました`, 'info');
+            } else {
+                if (comparisonList.length >= 3) {
+                    showToast(`比較できるのは最大3店舗までです`, 'error');
+                    return;
+                }
+                comparisonList.push(shopId);
+                showToast(`「${shop.name}」を比較リストに追加しました`, 'success');
+            }
+            updateCompareUI();
+            renderShops();
+            if (!document.getElementById('view-compare').classList.contains('hidden')) {
+                renderComparisonTable();
+            }
+        }
+
+        function updateCompareUI() {
+            const badge = document.getElementById('compare-badge');
+            badge.textContent = comparisonList.length;
+            if (comparisonList.length > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function clearComparison() {
+            comparisonList = [];
+            updateCompareUI();
+            renderShops();
+            renderComparisonTable();
+            showToast('比較リストをクリアしました', 'info');
+        }
+
+        function renderComparisonTable() {
+            const container = document.getElementById('compare-table-container');
+            if (comparisonList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-cocoa-400 text-sm">
+                        比較するケーキが選択されていません。<br>一覧画面のカードから「＋ 比較追加」を押して追加してください。
+                    </div>
+                `;
+                return;
+            }
+
+            const items = comparisonList.map(id => shopsData.find(s => s.id === id));
+
+            container.innerHTML = `
+                <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="border-b border-cocoa-800">
+                            <th class="p-3 w-32 text-cocoa-400">項目</th>
+                            ${items.map(s => `
+                                <th class="p-3 font-bold text-sm text-white text-center">
+                                    <img src="${s.image}" class="w-20 h-20 object-cover rounded-xl mx-auto mb-2 border border-cocoa-700">
+                                    <div>${s.name}</div>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-cocoa-800/60 text-cocoa-200">
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">看板ケーキ</td>
+                            ${items.map(s => `<td class="p-3 text-center text-gold-300 font-bold">${s.signature}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">価格</td>
+                            ${items.map(s => `<td class="p-3 text-center font-semibold">${s.priceDisplay}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">スタイル</td>
+                            ${items.map(s => `<td class="p-3 text-center"><span class="bg-cocoa-950 px-2.5 py-1 rounded-full border border-cocoa-800 text-gold-400">${s.category}</span></td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">カカオ濃厚度</td>
+                            ${items.map(s => `<td class="p-3 text-center font-bold text-gold-400">${s.cocoaRichness} / 5.0</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">イートイン</td>
+                            ${items.map(s => `<td class="p-3 text-center">${s.tags.includes('イートイン可') ? '⭕ 可' : '❌ テイクアウトメイン'}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="p-3 text-cocoa-400 font-semibold">推奨ドリンク</td>
+                            ${items.map(s => `<td class="p-3 text-center text-xs text-cocoa-300">${s.pairing}</td>`).join('')}
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
         function openShopModal(shopId) {
-            const shop = SHOPS_DATA.find(s => s.id === shopId);
+            currentActiveShopId = shopId;
+            const shop = shopsData.find(s => s.id === shopId);
             if (!shop) return;
 
-            const isFav = favorites.includes(shop.id);
-            const modal = document.getElementById('shop-modal');
-            const content = document.getElementById('modal-content');
+            document.getElementById('modal-img').src = shop.image;
+            document.getElementById('modal-title').textContent = shop.name;
+            document.getElementById('modal-category').textContent = shop.category;
+            document.getElementById('modal-area').textContent = shop.area;
+            document.getElementById('modal-signature').textContent = shop.signature;
+            document.getElementById('modal-price').textContent = shop.priceDisplay;
+            document.getElementById('modal-desc').textContent = shop.description;
+            document.getElementById('modal-temp').textContent = shop.tempTip;
+            document.getElementById('modal-drink').textContent = shop.pairing;
+            document.getElementById('modal-address').textContent = shop.address;
+            document.getElementById('modal-station').textContent = shop.station;
+            document.getElementById('modal-hours').textContent = shop.hours;
+            document.getElementById('modal-holidays').textContent = shop.holidays;
 
-            content.innerHTML = `
-                <!-- Main Header Image -->
-                <div class="relative h-64 sm:h-80 w-full overflow-hidden">
-                    <img src="${shop.image}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="bg-rose-500 text-xs font-extrabold px-2.5 py-0.5 rounded-full">📍 ${shop.area}</span>
-                            <span class="bg-amber-400 text-slate-900 text-xs font-extrabold px-2.5 py-0.5 rounded-full">★ ${shop.rating} (${shop.reviewsCount}件の口コミ)</span>
-                        </div>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold">${shop.name}</h2>
-                    </div>
-                </div>
+            const tagsContainer = document.getElementById('modal-tags-container');
+            tagsContainer.innerHTML = shop.tags.map(t => `<span class="bg-cocoa-950 text-gold-400 px-2 py-0.5 rounded text-[10px] border border-cocoa-800">#${t}</span>`).join('');
 
-                <div class="p-6 space-y-6">
-                    <!-- Actions Bar -->
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <div class="flex items-center gap-2 text-xs font-bold">
-                            <span class="text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">平均予算: ￥${shop.avgPrice.toLocaleString()}</span>
-                            ${shop.features.eatin ? '<span class="text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl">☕ イートインあり</span>' : ''}
-                            ${shop.features.takeout ? '<span class="text-sky-700 bg-sky-50 border border-sky-100 px-3 py-1.5 rounded-xl">🛍️ テイクアウト</span>' : ''}
-                        </div>
+            renderModalReviews(shop);
+            renderRadarChart(shop.radar);
 
-                        <button onclick="toggleFavorite('${shop.id}'); openShopModal('${shop.id}')" class="px-4 py-2 rounded-xl border font-bold text-xs flex items-center gap-1.5 transition ${isFav ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-white text-slate-700 border-slate-200 hover:border-rose-300'}">
-                            <i class="${isFav ? 'fa-solid text-rose-500' : 'fa-regular'} fa-heart"></i>
-                            <span>${isFav ? 'お気に入り済み' : '保存する'}</span>
-                        </button>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">お店について</h4>
-                        <p class="text-sm text-slate-700 leading-relaxed font-medium bg-rose-50/40 p-4 rounded-2xl border border-rose-100/60">
-                            ${shop.description}
-                        </p>
-                    </div>
-
-                    <!-- Popular Items / Menu -->
-                    <div>
-                        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <i class="fa-solid fa-utensils text-rose-400"></i> 人気の看板ケーキ・メニュー
-                        </h4>
-                        <div class="space-y-2">
-                            ${shop.popularItems.map(item => `
-                                <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white transition">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-base">🍰</span>
-                                        <span class="text-sm font-bold text-slate-800">${item.name}</span>
-                                        ${item.isRecommended ? '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md">おすすめ</span>' : ''}
-                                    </div>
-                                    <span class="text-sm font-extrabold text-rose-600">￥${item.price.toLocaleString()}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Basic Info & Hours -->
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2 text-xs font-medium text-slate-600">
-                        <div class="flex items-start gap-2">
-                            <i class="fa-solid fa-location-dot text-rose-500 mt-0.5"></i>
-                            <div><strong class="text-slate-800">住所:</strong> ${shop.address}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-clock text-amber-500"></i>
-                            <div><strong class="text-slate-800">営業時間:</strong> ${shop.hours}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-phone text-emerald-500"></i>
-                            <div><strong class="text-slate-800">電話番号:</strong> ${shop.phone}</div>
-                        </div>
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="flex gap-3 pt-2">
-                        <button onclick="openAddLogForShop('${shop.name}')" class="flex-1 py-3 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-pen-to-square"></i> この店のケーキ日記を書く
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.remove('hidden');
+            document.getElementById('shop-modal').classList.remove('hidden');
         }
 
         function closeShopModal() {
             document.getElementById('shop-modal').classList.add('hidden');
+            document.getElementById('review-form-container').classList.add('hidden');
         }
 
-        // FAVORITES SYSTEM
-        function toggleFavorite(shopId) {
-            const index = favorites.indexOf(shopId);
-            if (index > -1) {
-                favorites.splice(index, 1);
-                showToast('💔 お気に入りから削除しました');
-            } else {
-                favorites.push(shopId);
-                showToast('❤️ お気に入りに追加しました！');
+        function renderRadarChart(scores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
             }
-            localStorage.setItem('sweetspot_favs', JSON.stringify(favorites));
-            updateFavBadge();
-            applyFilters();
-            if (!document.getElementById('tab-favorites').classList.contains('hidden')) {
-                renderFavorites();
-            }
-        }
 
-        function updateFavBadge() {
-            const badge = document.getElementById('fav-count-badge');
-            const counterText = document.getElementById('fav-counter-text');
-            if (badge) {
-                if (favorites.length > 0) {
-                    badge.textContent = favorites.length;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['濃厚さ', '苦味・深み', '口溶け', 'カカオの香り', 'ギフト度'],
+                    datasets: [{
+                        label: '味わいプロファイル',
+                        data: scores,
+                        backgroundColor: 'rgba(245, 158, 11, 0.25)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fbbf24',
+                        pointBorderColor: '#1a0e07',
+                        pointHoverBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(222, 192, 157, 0.2)' },
+                            grid: { color: 'rgba(222, 192, 157, 0.2)' },
+                            pointLabels: {
+                                color: '#dec09d',
+                                font: { size: 10, family: 'Noto Sans JP' }
+                            },
+                            ticks: { display: false, stepSize: 20 },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
                 }
-            }
-            if (counterText) {
-                counterText.textContent = `${favorites.length} 件保存中`;
-            }
+            });
         }
 
-        function renderFavorites() {
-            const grid = document.getElementById('favorites-grid');
-            const empty = document.getElementById('favorites-empty');
-            const favShops = SHOPS_DATA.filter(s => favorites.includes(s.id));
-
-            if (favShops.length === 0) {
-                grid.innerHTML = '';
-                empty.classList.remove('hidden');
+        function renderModalReviews(shop) {
+            const list = document.getElementById('modal-reviews-list');
+            if (!shop.reviews || shop.reviews.length === 0) {
+                list.innerHTML = `<div class="text-xs text-cocoa-500 text-center py-2">まだクチコミはありません。最初の投稿者になりましょう！</div>`;
                 return;
             }
 
-            empty.classList.add('hidden');
-            grid.innerHTML = favShops.map(shop => `
-                <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
-                    <div>
-                        <div class="relative h-40 overflow-hidden cursor-pointer" onclick="openShopModal('${shop.id}')">
-                            <img src="${shop.image}" class="w-full h-full object-cover">
-                            <button onclick="event.stopPropagation(); toggleFavorite('${shop.id}')" class="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-rose-500 shadow-md">
-                                <i class="fa-solid fa-heart text-sm"></i>
-                            </button>
-                        </div>
-                        <div class="p-4 space-y-1">
-                            <span class="text-[10px] font-extrabold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">${shop.area}</span>
-                            <h4 class="font-extrabold text-sm text-slate-800 line-clamp-1">${shop.name}</h4>
-                            <div class="text-xs text-amber-500 font-bold">★ ${shop.rating} <span class="text-slate-400 font-normal">(${shop.reviewsCount})</span></div>
-                        </div>
+            list.innerHTML = shop.reviews.map(r => `
+                <div class="bg-cocoa-900/40 p-3 rounded-xl border border-cocoa-800/80 text-xs">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-white">${r.author}</span>
+                        <span class="text-gold-400 font-bold">${'★'.repeat(Math.round(r.rating))}</span>
                     </div>
-                    <div class="p-4 pt-0">
-                        <button onclick="openShopModal('${shop.id}')" class="w-full py-2 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl hover:bg-rose-100 transition">
-                            詳細を見る
-                        </button>
-                    </div>
+                    <p class="text-cocoa-300 leading-relaxed">${r.comment}</p>
                 </div>
             `).join('');
         }
 
-        // QUIZ / AI DIAGNOSIS
-        function answerQuiz(step, answer) {
-            quizAnswers[step] = answer;
-            if (step === 'flavor') {
-                document.getElementById('quiz-q1').classList.add('hidden');
-                document.getElementById('quiz-q2').classList.remove('hidden');
-            } else if (step === 'style') {
-                document.getElementById('quiz-q2').classList.add('hidden');
-                document.getElementById('quiz-q3').classList.remove('hidden');
-            } else if (step === 'budget') {
-                document.getElementById('quiz-q3').classList.add('hidden');
-                showQuizResult();
+        function toggleReviewForm() {
+            const form = document.getElementById('review-form-container');
+            form.classList.toggle('hidden');
+        }
+
+        function submitReview() {
+            const author = document.getElementById('review-author').value.trim() || '匿名ショコラファン';
+            const rating = parseFloat(document.getElementById('review-rating').value);
+            const comment = document.getElementById('review-comment').value.trim();
+
+            if (!comment) {
+                showToast('コメントを入力してください', 'error');
+                return;
+            }
+
+            const shop = shopsData.find(s => s.id === currentActiveShopId);
+            if (shop) {
+                shop.reviews.unshift({ author, rating, comment });
+                renderModalReviews(shop);
+                document.getElementById('review-comment').value = '';
+                toggleReviewForm();
+                showToast('クチコミを投稿しました！', 'success');
             }
         }
 
-        function showQuizResult() {
-            document.getElementById('quiz-result').classList.remove('hidden');
+        function openDiagnosisModal() {
+            resetQuiz();
+            document.getElementById('diagnosis-modal').classList.remove('hidden');
+        }
 
-            // Recommendation matching logic
-            let matched = SHOPS_DATA[0];
-
-            if (quizAnswers.flavor === 'fruity') {
-                matched = SHOPS_DATA.find(s => s.categories.includes('ショートケーキ') || s.categories.includes('タルト')) || SHOPS_DATA[0];
-            } else if (quizAnswers.flavor === 'rich') {
-                matched = SHOPS_DATA.find(s => s.categories.includes('チョコレート') || s.categories.includes('モンブラン')) || SHOPS_DATA[1];
-            } else if (quizAnswers.flavor === 'creamy') {
-                matched = SHOPS_DATA.find(s => s.categories.includes('チーズケーキ')) || SHOPS_DATA[4];
-            } else if (quizAnswers.flavor === 'light') {
-                matched = SHOPS_DATA.find(s => s.categories.includes('焼き菓子')) || SHOPS_DATA[6];
-            }
-
-            const resultContainer = document.getElementById('quiz-result-card');
-            resultContainer.innerHTML = `
-                <div class="bg-gradient-to-r from-rose-50 to-amber-50 p-5 rounded-3xl border border-rose-200/80 space-y-3">
-                    <div class="flex items-center gap-3">
-                        <img src="${matched.image}" class="w-20 h-20 rounded-2xl object-cover shadow-sm">
-                        <div>
-                            <span class="text-[10px] font-extrabold text-white bg-rose-500 px-2.5 py-0.5 rounded-full">あなたへのイチオシ</span>
-                            <h3 class="text-base font-extrabold text-slate-800 mt-1">${matched.name}</h3>
-                            <div class="text-xs font-bold text-amber-500">★ ${matched.rating} 📍 ${matched.area}</div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                        ${matched.description}
-                    </p>
-                    <div class="pt-2 border-t border-rose-200/60 flex items-center justify-between">
-                        <span class="text-xs font-extrabold text-rose-600">おすすめ: ${matched.popularItems[0]?.name}</span>
-                        <button onclick="openShopModal('${matched.id}')" class="px-4 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 shadow-md transition">
-                            お店の詳細をチェック
-                        </button>
-                    </div>
-                </div>
-            `;
+        function closeDiagnosisModal() {
+            document.getElementById('diagnosis-modal').classList.add('hidden');
         }
 
         function resetQuiz() {
-            quizAnswers = { flavor: '', style: '', budget: '' };
-            document.getElementById('quiz-result').classList.add('hidden');
-            document.getElementById('quiz-q3').classList.add('hidden');
-            document.getElementById('quiz-q2').classList.add('hidden');
-            document.getElementById('quiz-q1').classList.remove('hidden');
+            quizAnswers = { step1: '', step2: '', step3: '' };
+            document.querySelectorAll('.quiz-step').forEach(step => step.classList.add('hidden'));
+            document.querySelector('.quiz-step[data-step="1"]').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
         }
 
-        // CAKE LOG SYSTEM
-        function openAddLogModal() {
-            document.getElementById('add-log-modal').classList.remove('hidden');
-        }
-
-        function openAddLogForShop(shopName) {
-            closeShopModal();
-            document.getElementById('log-shop-name').value = shopName;
-            openAddLogModal();
-        }
-
-        function closeAddLogModal() {
-            document.getElementById('add-log-modal').classList.add('hidden');
-        }
-
-        function saveCakeLog(e) {
-            e.preventDefault();
-            const shopName = document.getElementById('log-shop-name').value.trim();
-            const cakeName = document.getElementById('log-cake-name').value.trim();
-            const date = document.getElementById('log-date').value;
-            const rating = parseInt(document.getElementById('log-rating').value);
-            const image = document.getElementById('log-image').value.trim() || 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80';
-            const memo = document.getElementById('log-memo').value.trim();
-
-            const newLog = {
-                id: 'log-' + Date.now(),
-                shopName,
-                cakeName,
-                date,
-                rating,
-                image,
-                memo
-            };
-
-            cakeLogs.unshift(newLog);
-            localStorage.setItem('sweetspot_logs', JSON.stringify(cakeLogs));
-
-            closeAddLogModal();
-            document.getElementById('cake-log-form').reset();
-            showToast('📖 ケーキ日記を保存しました！');
-
-            switchTab('log');
-            renderCakeLogs();
-        }
-
-        function deleteCakeLog(logId) {
-            cakeLogs = cakeLogs.filter(l => l.id !== logId);
-            localStorage.setItem('sweetspot_logs', JSON.stringify(cakeLogs));
-            showToast('🗑️ 日記を削除しました');
-            renderCakeLogs();
-        }
-
-        function renderCakeLogs() {
-            const list = document.getElementById('cake-log-list');
-            const empty = document.getElementById('cake-log-empty');
-
-            if (!cakeLogs || cakeLogs.length === 0) {
-                list.innerHTML = '';
-                empty.classList.remove('hidden');
-                return;
+        function selectAnswer(step, val) {
+            quizAnswers[`step${step}`] = val;
+            
+            if (step < 3) {
+                document.querySelector(`.quiz-step[data-step="${step}"]`).classList.add('hidden');
+                document.querySelector(`.quiz-step[data-step="${step + 1}"]`).classList.remove('hidden');
+            } else {
+                calculateDiagnosis();
             }
+        }
 
-            empty.classList.add('hidden');
-            list.innerHTML = cakeLogs.map(log => `
-                <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition space-y-3 p-4 flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="relative h-40 rounded-2xl overflow-hidden bg-slate-100">
-                            <img src="${log.image}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80'">
-                            <span class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                📅 ${log.date}
-                            </span>
-                        </div>
+        function calculateDiagnosis() {
+            document.querySelectorAll('.quiz-step').forEach(step => step.classList.add('hidden'));
+            
+            // Calculate matches score
+            const scoredShops = shopsData.map(shop => {
+                let matchScore = 70; // base
+
+                // Q1: Texture
+                if (quizAnswers.step1 === 'dense' && (shop.category === 'ガトーショコラ' || shop.category === 'テリーヌ')) matchScore += 15;
+                if (quizAnswers.step1 === 'smooth' && shop.category === 'ムース') matchScore += 15;
+                if (quizAnswers.step1 === 'fruity' && shop.category === 'Bean to Bar') matchScore += 15;
+
+                // Q2: Occasion
+                if (quizAnswers.step2 === 'gift' && shop.tags.includes('手土産推奨')) matchScore += 10;
+                if (quizAnswers.step2 === 'cafe' && shop.tags.includes('イートイン可')) matchScore += 10;
+                if (quizAnswers.step2 === 'reward' && shop.cocoaRichness >= 4.5) matchScore += 10;
+
+                // Q3: Drink
+                if (quizAnswers.step3 === 'coffee' && shop.pairing.includes('エスプレッソ')) matchScore += 5;
+                if (quizAnswers.step3 === 'wine' && shop.pairing.includes('ワイン')) matchScore += 5;
+                if (quizAnswers.step3 === 'tea' && shop.pairing.includes('ティー')) matchScore += 5;
+
+                matchScore = Math.min(matchScore, 99); // Max 99%
+                return { shop, matchScore };
+            });
+
+            scoredShops.sort((a, b) => b.matchScore - a.matchScore);
+            const topResults = scoredShops.slice(0, 3);
+
+            const container = document.getElementById('diagnosis-results-list');
+            container.innerHTML = topResults.map(res => `
+                <div class="bg-cocoa-900 border border-gold-500/30 rounded-2xl p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <img src="${res.shop.image}" class="w-14 h-14 rounded-xl object-cover shrink-0">
                         <div>
-                            <div class="text-amber-500 text-xs font-bold">
-                                ${'★'.repeat(log.rating)}${'☆'.repeat(5 - log.rating)}
-                            </div>
-                            <h4 class="font-extrabold text-base text-slate-800">${log.cakeName}</h4>
-                            <p class="text-xs font-bold text-rose-600">＠${log.shopName}</p>
+                            <span class="text-[10px] bg-gold-500 text-cocoa-950 font-bold px-2 py-0.5 rounded-full">マッチ度 ${res.matchScore}%</span>
+                            <h4 class="text-sm font-bold text-white mt-1">${res.shop.name}</h4>
+                            <div class="text-xs text-gold-400">${res.shop.signature}</div>
                         </div>
-                        ${log.memo ? `<p class="text-xs text-slate-600 bg-amber-50/60 p-3 rounded-xl border border-amber-100 leading-relaxed font-medium">${log.memo}</p>` : ''}
                     </div>
-                    <div class="flex justify-end pt-2 border-t border-slate-100">
-                        <button onclick="deleteCakeLog('${log.id}')" class="text-slate-400 hover:text-rose-500 text-xs font-bold flex items-center gap-1 transition">
-                            <i class="fa-regular fa-trash-can"></i> 削除
-                        </button>
-                    </div>
+                    <button onclick="closeDiagnosisModal(); openShopModal('${res.shop.id}');" class="text-xs bg-gold-500 text-cocoa-950 font-bold px-3 py-2 rounded-xl shrink-0">詳細を見る</button>
                 </div>
             `).join('');
+
+            document.getElementById('quiz-results').classList.remove('hidden');
         }
 
-        // TOAST NOTIFICATION
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const msg = document.getElementById('toast-msg');
-            msg.textContent = message;
+        function renderPairingGuide() {
+            const pairings = [
+                {
+                    drink: 'エスプレッソ & 深煎り珈琲',
+                    icon: '☕',
+                    recommendation: '濃厚ガトーショコラ / テリーヌショコラ',
+                    desc: '珈琲の強い苦味と深いコクが、高カカオの濃厚な脂質と見事に溶け合い、カカオの甘みをより一層引き立てます。',
+                    targetShopId: 'kens-cafe'
+                },
+                {
+                    drink: 'フルボディ赤ワイン / ウイスキー',
+                    icon: '🍷',
+                    recommendation: 'スパイス香るビタームース / 熟成テリーヌ',
+                    desc: '樽香やタンニン（渋み）がショコラのアロマと相乗効果を生み、大人でエレガントな余韻を楽しめます。',
+                    targetShopId: 'bubo-barcelona'
+                },
+                {
+                    drink: '浅煎りハンドドリップ / 華やか紅茶',
+                    icon: '🍵',
+                    recommendation: 'Bean to Bar クラフトショコラ',
+                    desc: '果実のようなフルーティーな酸味を持つシングルオリジンカカオには、浅煎り珈琲やアールグレイが至高のパートナーです。',
+                    targetShopId: 'minimal-yoyogi'
+                }
+            ];
 
-            toast.classList.remove('hidden');
-            toast.classList.remove('translate-y-4');
+            const container = document.getElementById('pairing-cards');
+            container.innerHTML = pairings.map(p => {
+                const targetShop = shopsData.find(s => s.id === p.targetShopId);
+                return `
+                <div class="bg-cocoa-900/80 border border-cocoa-800 rounded-3xl p-6 flex flex-col justify-between hover:border-gold-500/40 transition">
+                    <div>
+                        <div class="text-3xl mb-3">${p.icon}</div>
+                        <h3 class="text-lg font-bold text-white mb-1">${p.drink}</h3>
+                        <div class="text-xs font-semibold text-gold-400 mb-3">相性抜群: ${p.recommendation}</div>
+                        <p class="text-xs text-cocoa-300 leading-relaxed mb-6">${p.desc}</p>
+                    </div>
+                    <button onclick="switchView('grid'); openShopModal('${targetShop.id}');" class="w-full bg-cocoa-950 hover:bg-cocoa-800 text-gold-400 text-xs py-2.5 rounded-xl border border-cocoa-700 font-bold transition">
+                        代表店「${targetShop.name}」を見る ➔
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-cocoa-900 border-cocoa-700 text-cocoa-100';
+            if (type === 'success') bgClass = 'bg-cocoa-900 border-gold-500 text-gold-300';
+            if (type === 'error') bgClass = 'bg-red-950 border-red-700 text-red-200';
+
+            toast.className = `p-3.5 rounded-2xl border ${bgClass} text-xs shadow-2xl transition transform translate-y-2 opacity-0 flex items-center space-x-2 pointer-events-auto`;
+            toast.innerHTML = `<span>${message}</span>`;
+
+            container.appendChild(toast);
 
             setTimeout(() => {
-                toast.classList.add('translate-y-4');
-                setTimeout(() => toast.classList.add('hidden'), 300);
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
     </script>
